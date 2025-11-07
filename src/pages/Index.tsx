@@ -15,19 +15,6 @@ const Index = () => {
   const [expandedCamera, setExpandedCamera] = useState<number | null>(null);
   const [autoAcknowledge, setAutoAcknowledge] = useState(false);
   const [sensitivity, setSensitivity] = useState<"low" | "medium" | "high">("medium");
-  
-  // YouTube Live Stream URLs for public cameras
-  const youtubeStreams: Record<number, string> = {
-    1: "https://www.youtube.com/watch?v=1EiC9bvLGnk", // Earth from Space
-    2: "https://www.youtube.com/watch?v=86YLFOog4GM", // Times Square NYC
-    3: "https://www.youtube.com/watch?v=_OKAwz2MsJs", // Tokyo Street
-    4: "https://www.youtube.com/watch?v=mhVbLJvYP8s", // City Traffic
-    5: "https://www.youtube.com/watch?v=wCcMcaiRbhM", // Barcelona Beach
-    6: "https://www.youtube.com/watch?v=1-iS7LArMPA", // Miami Beach
-    7: "https://www.youtube.com/watch?v=eJ7ZkQ5TC08", // Norway Harbor
-    8: "https://www.youtube.com/watch?v=ydYDqZQpim8", // Train Station
-    9: "https://www.youtube.com/watch?v=wCcMcaiRbhM", // City Square
-  };
 
   // Simulate detection events
   useEffect(() => {
@@ -35,7 +22,7 @@ const Index = () => {
       // Randomly trigger a detection on one camera
       if (Math.random() < 0.15) {
         const cameraId = Math.floor(Math.random() * 9) + 1;
-        const detectionTypes: Detection["type"][] = ["THEFT", "FIGHT", "ROBBERY", "FALL"];
+        const detectionTypes: Detection["type"][] = ["THEFT", "FIGHT", "ROBBERY", "FALL", "VANDALISM"];
         const type = detectionTypes[Math.floor(Math.random() * detectionTypes.length)];
         
         if (!type) return;
@@ -154,23 +141,8 @@ const Index = () => {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
         {/* Left: CCTV Grid + Controls */}
         <div className="space-y-6">
-          {/* Live Streams Info */}
-          <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
-            <div className="flex items-start gap-3">
-              <Activity className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-sm font-bold text-foreground mb-1">
-                  Live YouTube Feeds
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Connected to public live streams from around the world. Click any camera to view details and full screen.
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* CCTV Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {Array.from({ length: 9 }, (_, i) => i + 1).map((cameraId) => (
               <CCTVTile
                 key={cameraId}
@@ -178,7 +150,6 @@ const Index = () => {
                 detection={detections[cameraId] || null}
                 onExpand={() => setExpandedCamera(cameraId)}
                 isHighlighted={highlightedCamera === cameraId}
-                youtubeUrl={youtubeStreams[cameraId]}
               />
             ))}
           </div>
@@ -209,7 +180,6 @@ const Index = () => {
           onClose={() => setExpandedCamera(null)}
           cameraId={expandedCamera}
           detection={detections[expandedCamera] || null}
-          youtubeUrl={youtubeStreams[expandedCamera]}
         />
       )}
     </div>
