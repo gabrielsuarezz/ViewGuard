@@ -30,7 +30,7 @@ All colors MUST be HSL.
     --accent: 327 100% 64%;
     --accent-foreground: 220 20% 8%;
 
-    --destructive: 2 100% 60%;
+    --destructive: 220 18% 15%;
     --destructive-foreground: 220 10% 98%;
 
     --border: 220 18% 18%;
@@ -40,7 +40,7 @@ All colors MUST be HSL.
     --radius: 0.5rem;
 
     /* Alert Colors */
-    --alert-high: 2 100% 60%;
+    --alert-high: 176 100% 30%;
     --alert-medium: 30 100% 50%;
     --alert-low: 50 100% 50%;
 
@@ -51,7 +51,7 @@ All colors MUST be HSL.
     /* Neon Glow */
     --neon-teal: 176 100% 41%;
     --neon-magenta: 327 100% 64%;
-    --neon-red: 2 100% 60%;
+    --neon-red: 176 100% 35%;
 
     --sidebar-background: 220 20% 8%;
     --sidebar-foreground: 220 10% 90%;
@@ -78,7 +78,7 @@ All colors MUST be HSL.
     --muted-foreground: 220 10% 60%;
     --accent: 327 100% 64%;
     --accent-foreground: 220 20% 8%;
-    --destructive: 2 100% 60%;
+    --destructive: 220 18% 15%;
     --destructive-foreground: 220 10% 98%;
     --border: 220 18% 18%;
     --input: 220 18% 15%;
