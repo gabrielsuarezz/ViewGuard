@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { Activity, BarChart3 } from "lucide-react";
+import { Activity, BarChart3, Video } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import CCTVTile, { Detection } from "@/components/CCTVTile";
 import NotificationsPanel, { Notification } from "@/components/NotificationsPanel";
-import ControlsPanel from "@/components/ControlsPanel";
 import CameraModal from "@/components/CameraModal";
 
 const Index = () => {
@@ -13,8 +12,7 @@ const Index = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [highlightedCamera, setHighlightedCamera] = useState<number | null>(null);
   const [expandedCamera, setExpandedCamera] = useState<number | null>(null);
-  const [autoAcknowledge, setAutoAcknowledge] = useState(false);
-  const [sensitivity, setSensitivity] = useState<"low" | "medium" | "high">("medium");
+  const onlineCameras = 8; // Simulated online count
 
   // Simulate detection events
   useEffect(() => {
@@ -81,28 +79,6 @@ const Index = () => {
     toast.success("False positive reported");
   };
 
-  const handleExport = () => {
-    const data = {
-      notifications: notifications.map((n) => ({
-        cameraId: n.cameraId,
-        type: n.detection.type,
-        confidence: n.detection.confidence,
-        timestamp: n.timestamp.toISOString(),
-      })),
-      exportedAt: new Date().toISOString(),
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `vigilantai-export-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    toast.success("Data exported successfully");
-  };
-
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
       {/* Header */}
@@ -139,10 +115,10 @@ const Index = () => {
 
       {/* Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
-        {/* Left: CCTV Grid + Controls */}
-        <div className="space-y-6">
+        {/* Left: CCTV Grid */}
+        <div>
           {/* CCTV Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 9 }, (_, i) => i + 1).map((cameraId) => (
               <CCTVTile
                 key={cameraId}
@@ -153,19 +129,23 @@ const Index = () => {
               />
             ))}
           </div>
-
-          {/* Controls */}
-          <ControlsPanel
-            autoAcknowledge={autoAcknowledge}
-            onAutoAcknowledgeChange={setAutoAcknowledge}
-            sensitivity={sensitivity}
-            onSensitivityChange={setSensitivity}
-            onExport={handleExport}
-          />
         </div>
 
-        {/* Right: Notifications */}
-        <aside className="h-[calc(100vh-180px)] sticky top-6">
+        {/* Right: Camera Status + Notifications */}
+        <aside className="h-[calc(100vh-180px)] sticky top-6 space-y-4">
+          {/* Camera Status */}
+          <div className="bg-card rounded-lg p-4 border border-border">
+            <div className="flex items-center gap-2">
+              <Video className="w-4 h-4 text-primary" />
+              <div>
+                <p className="text-xs text-muted-foreground">Cameras</p>
+                <p className="text-sm font-bold text-foreground">
+                  {onlineCameras}/9 online
+                </p>
+              </div>
+            </div>
+          </div>
+          {/* Notifications */}
           <NotificationsPanel
             notifications={notifications}
             onDismiss={handleDismiss}
