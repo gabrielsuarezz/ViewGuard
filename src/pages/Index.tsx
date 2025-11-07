@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Activity, BarChart3, Upload } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Activity, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,19 @@ const Index = () => {
   const [expandedCamera, setExpandedCamera] = useState<number | null>(null);
   const [autoAcknowledge, setAutoAcknowledge] = useState(false);
   const [sensitivity, setSensitivity] = useState<"low" | "medium" | "high">("medium");
-  const [videoSources, setVideoSources] = useState<Record<number, string>>({});
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // YouTube Live Stream URLs for public cameras
+  const youtubeStreams: Record<number, string> = {
+    1: "https://www.youtube.com/watch?v=1EiC9bvLGnk", // Earth from Space
+    2: "https://www.youtube.com/watch?v=86YLFOog4GM", // Times Square NYC
+    3: "https://www.youtube.com/watch?v=_OKAwz2MsJs", // Tokyo Street
+    4: "https://www.youtube.com/watch?v=mhVbLJvYP8s", // City Traffic
+    5: "https://www.youtube.com/watch?v=wCcMcaiRbhM", // Barcelona Beach
+    6: "https://www.youtube.com/watch?v=1-iS7LArMPA", // Miami Beach
+    7: "https://www.youtube.com/watch?v=eJ7ZkQ5TC08", // Norway Harbor
+    8: "https://www.youtube.com/watch?v=ydYDqZQpim8", // Train Station
+    9: "https://www.youtube.com/watch?v=wCcMcaiRbhM", // City Square
+  };
 
   // Simulate detection events
   useEffect(() => {
@@ -83,12 +94,6 @@ const Index = () => {
     toast.success("False positive reported");
   };
 
-  const handleVideoUpload = (cameraId: number, file: File) => {
-    const url = URL.createObjectURL(file);
-    setVideoSources((prev) => ({ ...prev, [cameraId]: url }));
-    toast.success(`Video uploaded for Camera ${cameraId}`);
-  };
-
   const handleExport = () => {
     const data = {
       notifications: notifications.map((n) => ({
@@ -149,28 +154,17 @@ const Index = () => {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
         {/* Left: CCTV Grid + Controls */}
         <div className="space-y-6">
-          {/* Upload Instructions */}
+          {/* Live Streams Info */}
           <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
             <div className="flex items-start gap-3">
-              <Upload className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <Activity className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-sm font-bold text-foreground mb-1">
-                  Upload Video Feeds
+                  Live YouTube Feeds
                 </h3>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Click any camera tile to upload a video file or configure RTSP stream. Supports MP4, WebM, and MOV formats.
+                <p className="text-xs text-muted-foreground">
+                  Connected to public live streams from around the world. Click any camera to view details and full screen.
                 </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="video/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    const cameraId = parseInt(e.target.dataset.cameraId || "1");
-                    if (file) handleVideoUpload(cameraId, file);
-                  }}
-                />
               </div>
             </div>
           </div>
@@ -178,36 +172,14 @@ const Index = () => {
           {/* CCTV Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: 9 }, (_, i) => i + 1).map((cameraId) => (
-              <div
+              <CCTVTile
                 key={cameraId}
-                className="relative group"
-                onClick={() => {
-                  if (!videoSources[cameraId]) {
-                    if (fileInputRef.current) {
-                      fileInputRef.current.dataset.cameraId = cameraId.toString();
-                      fileInputRef.current.click();
-                    }
-                  } else {
-                    setExpandedCamera(cameraId);
-                  }
-                }}
-              >
-                <CCTVTile
-                  cameraId={cameraId}
-                  detection={detections[cameraId] || null}
-                  onExpand={() => setExpandedCamera(cameraId)}
-                  isHighlighted={highlightedCamera === cameraId}
-                  videoSource={videoSources[cameraId]}
-                />
-                {!videoSources[cameraId] && (
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none rounded-lg">
-                    <div className="text-center">
-                      <Upload className="w-8 h-8 text-primary mx-auto mb-2" />
-                      <p className="text-xs text-foreground font-semibold">Upload Video</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+                cameraId={cameraId}
+                detection={detections[cameraId] || null}
+                onExpand={() => setExpandedCamera(cameraId)}
+                isHighlighted={highlightedCamera === cameraId}
+                youtubeUrl={youtubeStreams[cameraId]}
+              />
             ))}
           </div>
 
@@ -231,13 +203,13 @@ const Index = () => {
         </aside>
       </div>
 
-      {/* Expanded Camera Modal */}
       {expandedCamera && (
         <CameraModal
           isOpen={!!expandedCamera}
           onClose={() => setExpandedCamera(null)}
           cameraId={expandedCamera}
           detection={detections[expandedCamera] || null}
+          youtubeUrl={youtubeStreams[expandedCamera]}
         />
       )}
     </div>

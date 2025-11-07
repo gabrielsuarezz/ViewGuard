@@ -12,12 +12,20 @@ interface CameraModalProps {
   onClose: () => void;
   cameraId: number;
   detection: Detection | null;
+  youtubeUrl?: string;
 }
 
-const CameraModal = ({ isOpen, onClose, cameraId, detection }: CameraModalProps) => {
+const CameraModal = ({ isOpen, onClose, cameraId, detection, youtubeUrl }: CameraModalProps) => {
   const getCurrentTime = () => {
     const now = new Date();
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+  };
+
+  const getYoutubeEmbedUrl = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    const videoId = match && match[2].length === 11 ? match[2] : null;
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=1&showinfo=0&rel=0` : null;
   };
 
   return (
@@ -33,9 +41,19 @@ const CameraModal = ({ isOpen, onClose, cameraId, detection }: CameraModalProps)
         <div className="p-4">
           {/* Expanded Video Feed */}
           <div className="relative aspect-video bg-muted rounded-lg overflow-hidden scanline film-grain mb-4">
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
-              <Eye className="w-24 h-24" />
-            </div>
+            {youtubeUrl ? (
+              <iframe
+                src={getYoutubeEmbedUrl(youtubeUrl) || ''}
+                className="w-full h-full"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                style={{ border: 'none' }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground/20">
+                <Eye className="w-24 h-24" />
+              </div>
+            )}
 
             {/* Timestamp */}
             <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/60 text-xs font-mono text-foreground/80">

@@ -19,10 +19,19 @@ interface CCTVTileProps {
   onExpand: () => void;
   isHighlighted?: boolean;
   videoSource?: string;
+  youtubeUrl?: string;
 }
 
-const CCTVTile = ({ cameraId, detection, onExpand, isHighlighted, videoSource }: CCTVTileProps) => {
+const CCTVTile = ({ cameraId, detection, onExpand, isHighlighted, videoSource, youtubeUrl }: CCTVTileProps) => {
   const [isHovered, setIsHovered] = useState(false);
+
+  const getYoutubeEmbedUrl = (url: string) => {
+    // Extract video ID from various YouTube URL formats
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    const videoId = match && match[2].length === 11 ? match[2] : null;
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&showinfo=0&rel=0&loop=1&playlist=${videoId}` : null;
+  };
 
   const getRiskLevel = (confidence: number) => {
     if (confidence >= 85) return "high";
@@ -69,7 +78,15 @@ const CCTVTile = ({ cameraId, detection, onExpand, isHighlighted, videoSource }:
     >
       {/* CCTV Feed Background */}
       <div className="absolute inset-0 bg-muted scanline film-grain">
-        {videoSource ? (
+        {youtubeUrl ? (
+          <iframe
+            src={getYoutubeEmbedUrl(youtubeUrl) || ''}
+            className="w-full h-full object-cover pointer-events-none"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            style={{ border: 'none' }}
+          />
+        ) : videoSource ? (
           <video
             src={videoSource}
             autoPlay
