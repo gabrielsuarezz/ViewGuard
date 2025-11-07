@@ -82,9 +82,9 @@ const Analytics = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6">
+    <div className="min-h-screen bg-background p-4 md:p-6 cyber-bg">
       {/* Header */}
-      <header className="mb-6">
+      <header className="mb-6 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button
@@ -116,7 +116,7 @@ const Analytics = () => {
       </header>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 relative z-10">
         <Card className="bg-primary/10 border-primary/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -171,7 +171,7 @@ const Analytics = () => {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 relative z-10">
         {/* Detection Trends */}
         <Card className="bg-primary/10 border-primary/20">
           <CardHeader>
@@ -266,7 +266,7 @@ const Analytics = () => {
       </div>
 
       {/* Detection Types & Heatmap */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
         {/* Detection Types Distribution */}
         <Card className="bg-primary/10 border-primary/20">
           <CardHeader>
