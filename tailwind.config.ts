@@ -66,9 +66,14 @@ export default {
           low: "hsl(var(--alert-low))",
         },
         neon: {
-          teal: "hsl(var(--neon-teal))",
-          magenta: "hsl(var(--neon-magenta))",
+          cyan: "hsl(var(--neon-cyan))",
+          electric: "hsl(var(--neon-electric))",
+          pink: "hsl(var(--neon-pink))",
           red: "hsl(var(--neon-red))",
+        },
+        cyber: {
+          grid: "hsl(180 100% 50% / 0.1)",
+          glow: "hsl(180 100% 50% / 0.3)",
         },
       },
       borderRadius: {
@@ -93,12 +98,38 @@ export default {
             height: "0",
           },
         },
+        "cyber-scan": {
+          "0%": {
+            transform: "translateY(-100%)",
+            opacity: "0",
+          },
+          "50%": {
+            opacity: "1",
+          },
+          "100%": {
+            transform: "translateY(100%)",
+            opacity: "0",
+          },
+        },
+        "glitch": {
+          "0%, 100%": {
+            transform: "translate(0)",
+          },
+          "33%": {
+            transform: "translate(-2px, 2px)",
+          },
+          "66%": {
+            transform: "translate(2px, -2px)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
-        "detection-enter": "detection-enter 0.3s ease-out",
+        "detection-enter": "detection-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "cyber-scan": "cyber-scan 3s ease-in-out infinite",
+        "glitch": "glitch 0.3s ease-in-out",
       },
     },
   },
