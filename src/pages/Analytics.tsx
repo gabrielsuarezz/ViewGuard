@@ -196,6 +196,7 @@ const Analytics = () => {
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
+                    color: "hsl(var(--foreground))",
                   }}
                 />
                 <Legend />
@@ -256,9 +257,10 @@ const Analytics = () => {
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
+                    color: "hsl(var(--foreground))",
                   }}
                 />
-                <Bar dataKey="incidents" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="incidents" fill="hsl(var(--primary))" fillOpacity={0.8} radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -297,6 +299,7 @@ const Analytics = () => {
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
+                    color: "hsl(var(--foreground))",
                   }}
                 />
               </PieChart>
