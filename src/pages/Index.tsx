@@ -8,12 +8,12 @@ import CCTVTile, { Detection } from "@/components/CCTVTile";
 import NotificationsPanel, { Notification } from "@/components/NotificationsPanel";
 import CameraModal from "@/components/CameraModal";
 import { useReports } from "@/contexts/ReportsContext";
+import { useNotifications } from "@/contexts/NotificationsContext";
+
 const Index = () => {
-  const {
-    addReport
-  } = useReports();
+  const { addReport } = useReports();
+  const { notifications, addNotification, removeNotification } = useNotifications();
   const [detections, setDetections] = useState<Record<number, Detection | null>>({});
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [highlightedCamera, setHighlightedCamera] = useState<number | null>(null);
   const [expandedCamera, setExpandedCamera] = useState<number | null>(null);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
@@ -54,7 +54,7 @@ const Index = () => {
           detection,
           timestamp: new Date()
         };
-        setNotifications(prev => [notification, ...prev]);
+        addNotification(notification);
 
         // Highlight camera briefly
         setHighlightedCamera(cameraId);
@@ -81,7 +81,7 @@ const Index = () => {
     return () => clearInterval(interval);
   }, []);
   const handleDismiss = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    removeNotification(id);
     toast.info("Notification dismissed");
   };
   const handleReport = (id: string) => {
@@ -98,7 +98,7 @@ const Index = () => {
           detection: notification.detection,
           timestamp: notification.timestamp
         });
-        setNotifications(prev => prev.filter(n => n.id !== id));
+        removeNotification(id);
         setReportStatus("success");
         
         setTimeout(() => {

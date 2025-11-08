@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useNotifications } from "@/contexts/NotificationsContext";
+
 const Analytics = () => {
+  const { getHighRiskCount, getTotalDetections } = useNotifications();
   const [timeRange, setTimeRange] = useState("24h");
   const [isLiveUpdate, setIsLiveUpdate] = useState(false);
   const [lastUpdateTime, setLastUpdateTime] = useState(new Date());
@@ -213,8 +216,8 @@ const Analytics = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground">114</div>
-            <p className="text-xs text-muted-foreground">+12% from yesterday</p>
+            <div className="text-3xl font-bold text-foreground">{getTotalDetections()}</div>
+            <p className="text-xs text-muted-foreground">Active notifications</p>
           </CardContent>
         </Card>
 
@@ -226,7 +229,7 @@ const Analytics = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground">28</div>
+            <div className="text-3xl font-bold text-foreground">{getHighRiskCount()}</div>
             <p className="text-xs text-muted-foreground">Requires attention</p>
           </CardContent>
         </Card>
