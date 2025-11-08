@@ -7,9 +7,10 @@ import CCTVTile, { Detection } from "@/components/CCTVTile";
 import NotificationsPanel, { Notification } from "@/components/NotificationsPanel";
 import CameraModal from "@/components/CameraModal";
 import { useReports } from "@/contexts/ReportsContext";
-
 const Index = () => {
-  const { addReport } = useReports();
+  const {
+    addReport
+  } = useReports();
   const [detections, setDetections] = useState<Record<number, Detection | null>>({});
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [highlightedCamera, setHighlightedCamera] = useState<number | null>(null);
@@ -24,29 +25,32 @@ const Index = () => {
         const cameraId = Math.floor(Math.random() * 9) + 1;
         const detectionTypes: Detection["type"][] = ["THEFT", "FIGHT", "ROBBERY", "FALL", "VANDALISM"];
         const type = detectionTypes[Math.floor(Math.random() * detectionTypes.length)];
-        
         if (!type) return;
-
         const detection: Detection = {
           type,
-          confidence: Math.floor(Math.random() * 30) + 70, // 70-100%
+          confidence: Math.floor(Math.random() * 30) + 70,
+          // 70-100%
           timestamp: new Date().toLocaleTimeString(),
-          x: Math.random() * 60 + 10, // 10-70%
+          x: Math.random() * 60 + 10,
+          // 10-70%
           y: Math.random() * 60 + 10,
-          width: Math.random() * 20 + 15, // 15-35%
-          height: Math.random() * 20 + 15,
+          width: Math.random() * 20 + 15,
+          // 15-35%
+          height: Math.random() * 20 + 15
         };
-
-        setDetections((prev) => ({ ...prev, [cameraId]: detection }));
+        setDetections(prev => ({
+          ...prev,
+          [cameraId]: detection
+        }));
 
         // Create notification
         const notification: Notification = {
           id: `${cameraId}-${Date.now()}`,
           cameraId,
           detection,
-          timestamp: new Date(),
+          timestamp: new Date()
         };
-        setNotifications((prev) => [notification, ...prev]);
+        setNotifications(prev => [notification, ...prev]);
 
         // Highlight camera briefly
         setHighlightedCamera(cameraId);
@@ -54,13 +58,15 @@ const Index = () => {
 
         // Show toast
         toast.error(`Camera ${cameraId} — ${type} detected`, {
-          description: `Confidence: ${detection.confidence}%`,
+          description: `Confidence: ${detection.confidence}%`
         });
 
         // Auto-clear detection after 8 seconds
         setTimeout(() => {
-          setDetections((prev) => {
-            const updated = { ...prev };
+          setDetections(prev => {
+            const updated = {
+              ...prev
+            };
             delete updated[cameraId];
             return updated;
           });
@@ -70,41 +76,33 @@ const Index = () => {
 
     return () => clearInterval(interval);
   }, []);
-
   const handleDismiss = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setNotifications(prev => prev.filter(n => n.id !== id));
     toast.info("Notification dismissed");
   };
-
   const handleReport = (id: string) => {
-    const notification = notifications.find((n) => n.id === id);
+    const notification = notifications.find(n => n.id === id);
     if (notification) {
       addReport({
         id: notification.id,
         cameraId: notification.cameraId,
         detection: notification.detection,
-        timestamp: notification.timestamp,
+        timestamp: notification.timestamp
       });
     }
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setNotifications(prev => prev.filter(n => n.id !== id));
     toast.success("False positive reported");
   };
-
-  return (
-    <div className="min-h-screen bg-background p-4 md:p-6 cyber-bg">
+  return <div className="min-h-screen bg-background p-4 md:p-6 cyber-bg">
       {/* Floating particles */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-primary rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`,
-              animation: "float-particle 15s linear infinite",
-            }}
-          />
-        ))}
+        {Array.from({
+        length: 20
+      }).map((_, i) => <div key={i} className="absolute w-1 h-1 bg-primary rounded-full" style={{
+        left: `${Math.random() * 100}%`,
+        animationDelay: `${Math.random() * 10}s`,
+        animation: "float-particle 15s linear infinite"
+      }} />)}
       </div>
 
       {/* Header */}
@@ -115,28 +113,18 @@ const Index = () => {
               <Shield className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground tracking-wider">VIGILANT<span className="text-primary">AI</span></h1>
+              <h1 className="text-2xl font-bold text-foreground tracking-wider">ViewGuard<span className="text-primary">AI</span></h1>
               <p className="text-xs text-muted-foreground uppercase tracking-widest">Neural Surveillance Grid</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-              className="gap-2"
-            >
+            <Button variant="outline" size="sm" asChild className="gap-2">
               <Link to="/reports">
                 <FileText className="w-4 h-4" />
                 Reports
               </Link>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-              className="gap-2"
-            >
+            <Button variant="outline" size="sm" asChild className="gap-2">
               <Link to="/analytics">
                 <BarChart3 className="w-4 h-4" />
                 Analytics
@@ -156,15 +144,9 @@ const Index = () => {
         <div>
           {/* CCTV Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Array.from({ length: 9 }, (_, i) => i + 1).map((cameraId) => (
-              <CCTVTile
-                key={cameraId}
-                cameraId={cameraId}
-                detection={detections[cameraId] || null}
-                onExpand={() => setExpandedCamera(cameraId)}
-                isHighlighted={highlightedCamera === cameraId}
-              />
-            ))}
+            {Array.from({
+            length: 9
+          }, (_, i) => i + 1).map(cameraId => <CCTVTile key={cameraId} cameraId={cameraId} detection={detections[cameraId] || null} onExpand={() => setExpandedCamera(cameraId)} isHighlighted={highlightedCamera === cameraId} />)}
           </div>
         </div>
 
@@ -183,24 +165,11 @@ const Index = () => {
             </div>
           </div>
           {/* Notifications */}
-          <NotificationsPanel
-            notifications={notifications}
-            onDismiss={handleDismiss}
-            onReport={handleReport}
-          />
+          <NotificationsPanel notifications={notifications} onDismiss={handleDismiss} onReport={handleReport} />
         </aside>
       </div>
 
-      {expandedCamera && (
-        <CameraModal
-          isOpen={!!expandedCamera}
-          onClose={() => setExpandedCamera(null)}
-          cameraId={expandedCamera}
-          detection={detections[expandedCamera] || null}
-        />
-      )}
-    </div>
-  );
+      {expandedCamera && <CameraModal isOpen={!!expandedCamera} onClose={() => setExpandedCamera(null)} cameraId={expandedCamera} detection={detections[expandedCamera] || null} />}
+    </div>;
 };
-
 export default Index;
