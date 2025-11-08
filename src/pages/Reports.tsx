@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, FileText, Clock, AlertTriangle, Play } from "lucide-react";
+import { Shield, BarChart3, FileText, Clock, AlertTriangle, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,21 +65,28 @@ const Reports = () => {
       {/* Header */}
       <header className="mb-6 relative z-10">
         <div className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/">
-                <ArrowLeft className="w-5 h-5" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded bg-primary/20 border border-primary flex items-center justify-center glow-cyber">
+              <FileText className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground tracking-wider">Reports</h1>
+              <p className="text-xs text-muted-foreground uppercase tracking-widest">Incident Review & Analysis</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" asChild className="gap-2">
+              <Link to="/monitor">
+                <Shield className="w-4 h-4" />
+                Monitor
               </Link>
             </Button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded bg-primary/20 border border-primary flex items-center justify-center glow-cyber">
-                <FileText className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Incident Reports</h1>
-                <p className="text-xs text-muted-foreground">Reported false positives and review</p>
-              </div>
-            </div>
+            <Button variant="outline" size="sm" asChild className="gap-2">
+              <Link to="/analytics">
+                <BarChart3 className="w-4 h-4" />
+                Analytics
+              </Link>
+            </Button>
           </div>
         </div>
       </header>
