@@ -1,5 +1,7 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { Notification } from "@/components/NotificationsPanel";
+import { Detection } from "@/components/CCTVTile";
+import { toast } from "sonner";
 
 interface NotificationsContextType {
   notifications: Notification[];
@@ -13,6 +15,46 @@ const NotificationsContext = createContext<NotificationsContextType | undefined>
 
 export const NotificationsProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Simulate detection events that run continuously
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Randomly trigger a detection on one camera
+      if (Math.random() < 0.15) {
+        const cameraId = Math.floor(Math.random() * 9) + 1;
+        const detectionTypes: Detection["type"][] = ["THEFT", "FIGHT", "ROBBERY", "FALL", "VANDALISM"];
+        const type = detectionTypes[Math.floor(Math.random() * detectionTypes.length)];
+        if (!type) return;
+        
+        const detection: Detection = {
+          type,
+          confidence: Math.floor(Math.random() * 30) + 70,
+          timestamp: new Date().toLocaleTimeString(),
+          x: Math.random() * 60 + 10,
+          y: Math.random() * 60 + 10,
+          width: Math.random() * 20 + 15,
+          height: Math.random() * 20 + 15
+        };
+
+        // Create notification
+        const notification: Notification = {
+          id: `${cameraId}-${Date.now()}`,
+          cameraId,
+          detection,
+          timestamp: new Date()
+        };
+        
+        setNotifications(prev => [notification, ...prev]);
+
+        // Show toast
+        toast.error(`Camera ${cameraId} — ${type} detected`, {
+          description: `Confidence: ${detection.confidence}%`
+        });
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   const addNotification = (notification: Notification) => {
     setNotifications(prev => [notification, ...prev]);

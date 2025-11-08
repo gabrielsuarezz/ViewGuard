@@ -21,65 +21,32 @@ const Index = () => {
   const [currentReportType, setCurrentReportType] = useState<string>("");
   const onlineCameras = 9; // Simulated online count
 
-  // Simulate detection events
+  // Listen to new notifications and update detections display
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Randomly trigger a detection on one camera
-      if (Math.random() < 0.15) {
-        const cameraId = Math.floor(Math.random() * 9) + 1;
-        const detectionTypes: Detection["type"][] = ["THEFT", "FIGHT", "ROBBERY", "FALL", "VANDALISM"];
-        const type = detectionTypes[Math.floor(Math.random() * detectionTypes.length)];
-        if (!type) return;
-        const detection: Detection = {
-          type,
-          confidence: Math.floor(Math.random() * 30) + 70,
-          // 70-100%
-          timestamp: new Date().toLocaleTimeString(),
-          x: Math.random() * 60 + 10,
-          // 10-70%
-          y: Math.random() * 60 + 10,
-          width: Math.random() * 20 + 15,
-          // 15-35%
-          height: Math.random() * 20 + 15
-        };
-        setDetections(prev => ({
-          ...prev,
-          [cameraId]: detection
-        }));
+    if (notifications.length > 0) {
+      const latestNotification = notifications[0];
+      const cameraId = latestNotification.cameraId;
+      
+      // Update detections for visual display
+      setDetections(prev => ({
+        ...prev,
+        [cameraId]: latestNotification.detection
+      }));
 
-        // Create notification
-        const notification: Notification = {
-          id: `${cameraId}-${Date.now()}`,
-          cameraId,
-          detection,
-          timestamp: new Date()
-        };
-        addNotification(notification);
+      // Highlight camera briefly
+      setHighlightedCamera(cameraId);
+      setTimeout(() => setHighlightedCamera(null), 3000);
 
-        // Highlight camera briefly
-        setHighlightedCamera(cameraId);
-        setTimeout(() => setHighlightedCamera(null), 3000);
-
-        // Show toast
-        toast.error(`Camera ${cameraId} — ${type} detected`, {
-          description: `Confidence: ${detection.confidence}%`
+      // Auto-clear detection after 8 seconds
+      setTimeout(() => {
+        setDetections(prev => {
+          const updated = { ...prev };
+          delete updated[cameraId];
+          return updated;
         });
-
-        // Auto-clear detection after 8 seconds
-        setTimeout(() => {
-          setDetections(prev => {
-            const updated = {
-              ...prev
-            };
-            delete updated[cameraId];
-            return updated;
-          });
-        }, 8000);
-      }
-    }, 5000); // Check every 5 seconds
-
-    return () => clearInterval(interval);
-  }, []);
+      }, 8000);
+    }
+  }, [notifications]);
   const handleDismiss = (id: string) => {
     removeNotification(id);
     toast.info("Notification dismissed");
