@@ -43,7 +43,7 @@ const Landing = () => {
             <span 
               className="inline-block text-white"
               style={{
-                textShadow: '0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.6), 0 0 30px rgba(255,255,255,0.4), 0 0 40px rgba(255,255,255,0.2)'
+                textShadow: '0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(255,255,255,0.2)'
               }}
             >
               View
@@ -51,7 +51,7 @@ const Landing = () => {
             <span 
               className="inline-block text-blue-500"
               style={{
-                textShadow: '0 0 10px rgba(59,130,246,1), 0 0 20px rgba(59,130,246,0.8), 0 0 30px rgba(59,130,246,0.6), 0 0 40px rgba(59,130,246,0.4), 0 0 60px rgba(59,130,246,0.2)'
+                textShadow: '0 0 20px rgba(59,130,246,0.8), 0 0 40px rgba(59,130,246,0.4)'
               }}
             >
               Guard
