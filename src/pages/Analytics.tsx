@@ -331,12 +331,12 @@ const Analytics = () => {
             <CardDescription>Distribution of incident types</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={400}>
               <PieChart>
                 <Pie data={detectionTypes} cx="50%" cy="50%" labelLine={false} label={({
                 name,
                 percent
-              }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={100} fill="#8884d8" dataKey="value" className="cursor-pointer">
+              }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={140} fill="#8884d8" dataKey="value" className="cursor-pointer">
                   {detectionTypes.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} className="hover:opacity-80 transition-opacity" />)}
                 </Pie>
                 <Tooltip content={({
@@ -384,28 +384,40 @@ const Analytics = () => {
             <CardDescription>Hotspot zones across time periods</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="grid grid-cols-9 gap-2">
                 {Array.from({
                 length: 9
-              }, (_, i) => <div key={i} className="text-center text-[10px] text-muted-foreground font-mono">
+              }, (_, i) => <div key={i} className="text-center text-xs text-muted-foreground font-mono font-semibold">
                     C{i + 1}
                   </div>)}
               </div>
               {heatmapData.map((row, rowIndex) => <div key={rowIndex} className="grid grid-cols-9 gap-2">
-                  {row.map((value, colIndex) => <div key={colIndex} className={`aspect-square rounded ${getHeatmapColor(value)} flex items-center justify-center text-xs font-semibold ${value > 0 ? "text-foreground" : "text-muted-foreground"}`} title={`Camera ${colIndex + 1}: ${value} incidents`}>
-                      {value > 0 ? value : ""}
+                  {row.map((value, colIndex) => <div key={colIndex} className={`aspect-square rounded-lg ${getHeatmapColor(value)} flex items-center justify-center text-sm font-bold ${value > 0 ? "text-foreground shadow-lg" : "text-muted-foreground"} hover:scale-110 transition-all duration-200 cursor-pointer border border-border/20`} title={`Camera ${colIndex + 1}, Time ${rowIndex + 1}: ${value} incidents`}>
+                      {value > 0 ? value : "·"}
                     </div>)}
                 </div>)}
-              <div className="flex items-center justify-between pt-4 text-xs text-muted-foreground">
-                <span>Low activity</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-muted/30 rounded"></div>
-                  <div className="w-4 h-4 bg-alert-low/30 rounded"></div>
-                  <div className="w-4 h-4 bg-alert-medium/40 rounded"></div>
-                  <div className="w-4 h-4 bg-alert-high/80 rounded"></div>
+              <div className="flex items-center justify-between pt-4 text-xs">
+                <span className="text-muted-foreground font-medium">Low Activity</span>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <div className="w-6 h-6 bg-muted/30 rounded border border-border/20"></div>
+                    <span className="text-muted-foreground">0</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-6 h-6 bg-alert-low/30 rounded border border-border/20"></div>
+                    <span className="text-muted-foreground">1-2</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-6 h-6 bg-alert-medium/40 rounded border border-border/20"></div>
+                    <span className="text-muted-foreground">3-4</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-6 h-6 bg-alert-high/80 rounded border border-border/20 shadow-lg"></div>
+                    <span className="text-muted-foreground">5+</span>
+                  </div>
                 </div>
-                <span>High activity</span>
+                <span className="text-muted-foreground font-medium">High Activity</span>
               </div>
             </div>
           </CardContent>
