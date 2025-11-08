@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, BarChart3, Video, FileText, Loader2, CheckCircle2 } from "lucide-react";
+import { Shield, BarChart3, Video, FileText, Loader2, CheckCircle2, Upload, Radio } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -133,6 +133,18 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" asChild className="gap-2">
+              <Link to="/upload">
+                <Upload className="w-4 h-4" />
+                Upload
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild className="gap-2">
+              <Link to="/realtime">
+                <Radio className="w-4 h-4" />
+                Realtime
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" asChild className="gap-2">
               <Link to="/reports">
                 <FileText className="w-4 h-4" />

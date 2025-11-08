@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, BarChart3, FileText, Clock, AlertTriangle, Play } from "lucide-react";
+import { Shield, BarChart3, FileText, Clock, AlertTriangle, Play, Upload, Radio } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -79,6 +79,18 @@ const Reports = () => {
               <Link to="/monitor">
                 <Shield className="w-4 h-4" />
                 Monitor
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild className="gap-2">
+              <Link to="/upload">
+                <Upload className="w-4 h-4" />
+                Upload
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild className="gap-2">
+              <Link to="/realtime">
+                <Radio className="w-4 h-4" />
+                Realtime
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild className="gap-2">
