@@ -7,6 +7,27 @@ const Landing = () => {
   const [animationsReady, setAnimationsReady] = useState(false);
   const fullText = "ADVANCED SURVEILLANCE SYSTEM";
   
+  // Generate stable random values for orbs
+  const orbConfigs = useState(() => 
+    Array.from({ length: 5 }, () => ({
+      width: Math.random() * 300 + 200,
+      height: Math.random() * 300 + 200,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      duration: Math.random() * 10 + 15
+    }))
+  )[0];
+
+  // Generate stable random values for particles
+  const particleConfigs = useState(() =>
+    Array.from({ length: 20 }, () => ({
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      duration: Math.random() * 15 + 10,
+      delay: Math.random() * 5 + 1
+    }))
+  )[0];
+  
   useEffect(() => {
     let index = 0;
     const timer = setInterval(() => {
@@ -68,19 +89,18 @@ const Landing = () => {
       {/* Floating Orbs */}
       {animationsReady && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {Array.from({ length: 5 }).map((_, i) => (
+          {orbConfigs.map((config, i) => (
             <div
               key={`orb-${i}`}
               className="absolute rounded-full bg-primary/20 blur-3xl animate-fade-in"
               style={{
-                width: `${Math.random() * 300 + 200}px`,
-                height: `${Math.random() * 300 + 200}px`,
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animation: `fade-in 1s ease-out, float-orb ${Math.random() * 10 + 15}s ease-in-out infinite`,
+                width: `${config.width}px`,
+                height: `${config.height}px`,
+                left: `${config.left}%`,
+                top: `${config.top}%`,
+                animation: `fade-in 1s ease-out, float-orb ${config.duration}s ease-in-out infinite`,
                 animationDelay: `0s, ${i * 2}s`,
-                willChange: 'transform',
-                transform: 'translateZ(0)'
+                willChange: 'transform'
               }}
             />
           ))}
@@ -111,18 +131,17 @@ const Landing = () => {
       {/* Particle Network */}
       {animationsReady && (
         <div className="absolute inset-0 pointer-events-none">
-          {Array.from({ length: 20 }).map((_, i) => (
+          {particleConfigs.map((config, i) => (
             <div
               key={`particle-${i}`}
               className="absolute w-1 h-1 bg-primary rounded-full animate-fade-in"
               style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animation: `fade-in 1s ease-out, particle-float ${Math.random() * 15 + 10}s ease-in-out infinite`,
-                animationDelay: `0s, ${Math.random() * 5 + 1}s`,
+                left: `${config.left}%`,
+                top: `${config.top}%`,
+                animation: `fade-in 1s ease-out, particle-float ${config.duration}s ease-in-out infinite`,
+                animationDelay: `0s, ${config.delay}s`,
                 boxShadow: '0 0 10px rgba(59, 130, 246, 0.8)',
-                willChange: 'transform, opacity',
-                transform: 'translateZ(0)'
+                willChange: 'transform, opacity'
               }}
             />
           ))}
