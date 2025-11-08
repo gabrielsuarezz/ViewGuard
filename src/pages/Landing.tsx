@@ -1,6 +1,25 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+
 const Landing = () => {
+  const [typedText, setTypedText] = useState("");
+  const fullText = "ADVANCED SURVEILLANCE SYSTEM";
+  
+  useEffect(() => {
+    let index = 0;
+    const timer = setInterval(() => {
+      if (index < fullText.length) {
+        setTypedText(fullText.slice(0, index + 1));
+        index++;
+      } else {
+        clearInterval(timer);
+      }
+    }, 100);
+    
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
       {/* Layered gradient backgrounds with blue merging into black */}
@@ -57,8 +76,9 @@ const Landing = () => {
               Guard
             </span>
           </h1>
-          <p className="text-muted-foreground text-lg md:text-xl tracking-widest font-light overflow-hidden">
-            <span className="inline-block animate-typing">ADVANCED SURVEILLANCE SYSTEM</span>
+          <p className="text-muted-foreground text-lg md:text-xl tracking-widest font-light min-h-[1.75rem]">
+            {typedText}
+            <span className="animate-pulse">|</span>
           </p>
         </div>
 
