@@ -30,7 +30,9 @@ const Landing = () => {
             linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)
           `,
           backgroundSize: '50px 50px',
-          animation: 'grid-move-landing 20s linear infinite'
+          animation: 'grid-move-landing 20s linear infinite',
+          willChange: 'transform',
+          transform: 'translateZ(0)'
         }} />
       </div>
 
@@ -39,13 +41,17 @@ const Landing = () => {
         <div className="absolute w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"
           style={{
             animation: 'scan-vertical 8s ease-in-out infinite',
-            boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)'
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)',
+            willChange: 'top',
+            transform: 'translateZ(0)'
           }}
         />
         <div className="absolute w-1 h-full bg-gradient-to-b from-transparent via-primary to-transparent opacity-50"
           style={{
             animation: 'scan-horizontal 6s ease-in-out infinite',
-            boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)'
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)',
+            willChange: 'left',
+            transform: 'translateZ(0)'
           }}
         />
       </div>
@@ -62,7 +68,9 @@ const Landing = () => {
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               animation: `float-orb ${Math.random() * 10 + 15}s ease-in-out infinite`,
-              animationDelay: `${i * 2}s`
+              animationDelay: `${i * 2}s`,
+              willChange: 'transform',
+              transform: 'translateZ(0)'
             }}
           />
         ))}
@@ -81,7 +89,9 @@ const Landing = () => {
               top: '50%',
               transform: 'translate(-50%, -50%)',
               animation: `rotate-shape ${20 + i * 5}s linear infinite`,
-              borderRadius: i % 2 === 0 ? '0' : '50%'
+              borderRadius: i % 2 === 0 ? '0' : '50%',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden'
             }}
           />
         ))}
@@ -89,7 +99,7 @@ const Landing = () => {
 
       {/* Particle Network */}
       <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: 30 }).map((_, i) => (
+        {Array.from({ length: 20 }).map((_, i) => (
           <div
             key={`particle-${i}`}
             className="absolute w-1 h-1 bg-primary rounded-full"
@@ -98,7 +108,9 @@ const Landing = () => {
               top: `${Math.random() * 100}%`,
               animation: `particle-float ${Math.random() * 15 + 10}s ease-in-out infinite`,
               animationDelay: `${Math.random() * 5}s`,
-              boxShadow: '0 0 10px rgba(59, 130, 246, 0.8)'
+              boxShadow: '0 0 10px rgba(59, 130, 246, 0.8)',
+              willChange: 'transform, opacity',
+              transform: 'translateZ(0)'
             }}
           />
         ))}
@@ -115,7 +127,9 @@ const Landing = () => {
               height: '100px',
               animation: `pulse-wave ${3 + i}s ease-out infinite`,
               animationDelay: `${i * 1}s`,
-              opacity: 0
+              opacity: 0,
+              willChange: 'width, height, opacity',
+              transform: 'translateZ(0)'
             }}
           />
         ))}
