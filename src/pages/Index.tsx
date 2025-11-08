@@ -19,7 +19,7 @@ const Index = () => {
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [reportStatus, setReportStatus] = useState<"loading" | "success">("loading");
   const [currentReportType, setCurrentReportType] = useState<string>("");
-  const onlineCameras = 8; // Simulated online count
+  const onlineCameras = 9; // Simulated online count
 
   // Simulate detection events
   useEffect(() => {
@@ -186,7 +186,7 @@ const Index = () => {
               <div>
                 <p className="text-xs text-muted-foreground">Cameras</p>
                 <p className="text-sm font-bold text-foreground">
-                  {onlineCameras}/9 online
+                  {onlineCameras}/13 online
                 </p>
               </div>
             </div>
