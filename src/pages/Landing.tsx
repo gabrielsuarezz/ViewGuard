@@ -22,37 +22,108 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden flex items-center justify-center">
-      {/* Layered gradient backgrounds with blue merging into black */}
-      <div className="absolute inset-0">
-        {/* Base gradient from corners */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/30 via-black to-black" />
-        <div className="absolute inset-0 bg-gradient-to-tl from-blue-800/20 via-transparent to-transparent" />
-        
-        {/* Animated radial gradients */}
-        <div 
-          className="absolute -top-1/2 -right-1/2 w-full h-full rounded-full blur-3xl opacity-30"
+      {/* Animated Grid Background */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `
+            linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px',
+          animation: 'grid-move-landing 20s linear infinite'
+        }} />
+      </div>
+
+      {/* Animated Scan Lines */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50"
           style={{
-            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
-            animation: 'pulse 8s ease-in-out infinite'
+            animation: 'scan-vertical 8s ease-in-out infinite',
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)'
           }}
         />
-        <div 
-          className="absolute -bottom-1/2 -left-1/2 w-full h-full rounded-full blur-3xl opacity-20"
+        <div className="absolute w-1 h-full bg-gradient-to-b from-transparent via-primary to-transparent opacity-50"
           style={{
-            background: 'radial-gradient(circle, rgba(29, 78, 216, 0.5) 0%, transparent 70%)',
-            animation: 'pulse 10s ease-in-out infinite',
-            animationDelay: '2s'
-          }}
-        />
-        
-        {/* Center glow */}
-        <div 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl opacity-20"
-          style={{
-            background: 'radial-gradient(circle, rgba(96, 165, 250, 0.3) 0%, transparent 70%)'
+            animation: 'scan-horizontal 6s ease-in-out infinite',
+            boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)'
           }}
         />
       </div>
+
+      {/* Floating Orbs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={`orb-${i}`}
+            className="absolute rounded-full bg-primary/20 blur-3xl"
+            style={{
+              width: `${Math.random() * 300 + 200}px`,
+              height: `${Math.random() * 300 + 200}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animation: `float-orb ${Math.random() * 10 + 15}s ease-in-out infinite`,
+              animationDelay: `${i * 2}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Rotating Geometric Shapes */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={`shape-${i}`}
+            className="absolute border-2 border-primary"
+            style={{
+              width: `${(i + 1) * 200}px`,
+              height: `${(i + 1) * 200}px`,
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              animation: `rotate-shape ${20 + i * 5}s linear infinite`,
+              borderRadius: i % 2 === 0 ? '0' : '50%'
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Particle Network */}
+      <div className="absolute inset-0 pointer-events-none">
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div
+            key={`particle-${i}`}
+            className="absolute w-1 h-1 bg-primary rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animation: `particle-float ${Math.random() * 15 + 10}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 5}s`,
+              boxShadow: '0 0 10px rgba(59, 130, 246, 0.8)'
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Pulse Waves */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={`wave-${i}`}
+            className="absolute border-2 border-primary rounded-full"
+            style={{
+              width: '100px',
+              height: '100px',
+              animation: `pulse-wave ${3 + i}s ease-out infinite`,
+              animationDelay: `${i * 1}s`,
+              opacity: 0
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Gradient Overlays */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-transparent to-purple-900/20" />
+      <div className="absolute inset-0 bg-gradient-to-tl from-cyan-900/10 via-transparent to-blue-900/10" />
 
       {/* Content */}
       <div className="relative z-10 text-center space-y-16 px-4">

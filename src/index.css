@@ -327,4 +327,80 @@ All colors MUST be HSL.
       opacity: 0;
     }
   }
+
+  /* Landing page animations */
+  @keyframes grid-move-landing {
+    0% {
+      transform: translate(0, 0);
+    }
+    100% {
+      transform: translate(50px, 50px);
+    }
+  }
+
+  @keyframes scan-vertical {
+    0%, 100% {
+      top: -10%;
+    }
+    50% {
+      top: 110%;
+    }
+  }
+
+  @keyframes scan-horizontal {
+    0%, 100% {
+      left: -10%;
+    }
+    50% {
+      left: 110%;
+    }
+  }
+
+  @keyframes float-orb {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+    }
+    25% {
+      transform: translate(100px, -100px) scale(1.1);
+    }
+    50% {
+      transform: translate(200px, 50px) scale(0.9);
+    }
+    75% {
+      transform: translate(-50px, 100px) scale(1.05);
+    }
+  }
+
+  @keyframes rotate-shape {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+  }
+
+  @keyframes particle-float {
+    0%, 100% {
+      transform: translate(0, 0);
+      opacity: 0.3;
+    }
+    50% {
+      transform: translate(50px, -50px);
+      opacity: 1;
+    }
+  }
+
+  @keyframes pulse-wave {
+    0% {
+      width: 100px;
+      height: 100px;
+      opacity: 1;
+    }
+    100% {
+      width: 800px;
+      height: 800px;
+      opacity: 0;
+    }
+  }
 }
