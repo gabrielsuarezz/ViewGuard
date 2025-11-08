@@ -68,9 +68,11 @@ const Landing = () => {
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               animation: `float-orb ${Math.random() * 10 + 15}s ease-in-out infinite`,
-              animationDelay: `${i * 2}s`,
+              animationDelay: `${i * 3 + 1}s`,
+              animationFillMode: 'backwards',
               willChange: 'transform',
-              transform: 'translateZ(0)'
+              transform: 'translateZ(0)',
+              opacity: 0
             }}
           />
         ))}
@@ -107,10 +109,12 @@ const Landing = () => {
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               animation: `particle-float ${Math.random() * 15 + 10}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 5}s`,
+              animationDelay: `${Math.random() * 8 + 2}s`,
+              animationFillMode: 'backwards',
               boxShadow: '0 0 10px rgba(59, 130, 246, 0.8)',
               willChange: 'transform, opacity',
-              transform: 'translateZ(0)'
+              transform: 'translateZ(0)',
+              opacity: 0
             }}
           />
         ))}
