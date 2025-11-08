@@ -36,11 +36,19 @@ export default function RealtimeStreamPage() {
   const isDetectingRef = useRef<boolean>(false);
   const isPhase2EnabledRef = useRef<boolean>(false);
 
-  // Refs for fall detection algorithm
-  const noseYHistoryRef = useRef<number[]>([]);
+  // Refs for enhanced multi-detection algorithm
+  const centerOfMassHistoryRef = useRef<{ x: number; y: number }[]>([]); // Track center of mass for enhanced fall detection
   const lastFallTimeRef = useRef<number>(0); // Track last fall detection time for debounce
+  const personOnGroundStartTimeRef = useRef<number>(0); // Track when person first went horizontal
+  const handsRaisedStartTimeRef = useRef<number>(0); // Track when hands first raised
+  const lastHandsRaisedAlertRef = useRef<number>(0); // Debounce for hands raised alerts
+  const lastPersonOnGroundAlertRef = useRef<number>(0); // Debounce for person on ground alerts
+  const previousKeypointsRef = useRef<PoseKeypoint[]>([]); // Track previous frame for movement detection
+
   const HISTORY_LENGTH = 5;
-  const FALL_VELOCITY_THRESHOLD = 15; // pixels per frame
+  const FALL_VELOCITY_THRESHOLD = 0.15; // 15% of person height per frame (adaptive)
+  const PERSON_ON_GROUND_DURATION = 5000; // 5 seconds horizontal = medical emergency
+  const HANDS_RAISED_DURATION = 2000; // 2 seconds hands raised = distress/robbery
 
   // State management
   const [isInitializing, setIsInitializing] = useState(true);
@@ -257,6 +265,73 @@ export default function RealtimeStreamPage() {
     }
   };
 
+  // ========== HELPER FUNCTIONS FOR POSE ANALYSIS ==========
+
+  // Calculate person height (nose to ankles)
+  const calculatePersonHeight = (keypoints: Keypoint[]): number => {
+    const nose = keypoints.find((kp) => kp.name === "nose");
+    const leftAnkle = keypoints.find((kp) => kp.name === "left_ankle");
+    const rightAnkle = keypoints.find((kp) => kp.name === "right_ankle");
+
+    if (!nose || !leftAnkle || !rightAnkle) return 0;
+    if (!nose.score || nose.score < 0.3) return 0;
+    if (!leftAnkle.score || !rightAnkle.score || (leftAnkle.score < 0.3 && rightAnkle.score < 0.3)) return 0;
+
+    // Use the ankle with higher confidence
+    const ankle = leftAnkle.score && leftAnkle.score > (rightAnkle.score || 0) ? leftAnkle : rightAnkle;
+    return Math.abs(ankle.y - nose.y);
+  };
+
+  // Calculate center of mass (average of shoulders and hips)
+  const calculateCenterOfMass = (keypoints: Keypoint[]): { x: number; y: number } | null => {
+    const torsoPoints = keypoints.filter((kp) =>
+      (kp.name?.includes("hip") || kp.name?.includes("shoulder")) &&
+      kp.score && kp.score > 0.3
+    );
+
+    if (torsoPoints.length === 0) return null;
+
+    const sumX = torsoPoints.reduce((sum, kp) => sum + kp.x, 0);
+    const sumY = torsoPoints.reduce((sum, kp) => sum + kp.y, 0);
+
+    return {
+      x: sumX / torsoPoints.length,
+      y: sumY / torsoPoints.length,
+    };
+  };
+
+  // Calculate body angle (0 = vertical/standing, 90 = horizontal/lying)
+  const calculateBodyAngle = (shoulders: Keypoint[], hips: Keypoint[]): number => {
+    if (shoulders.length < 2 || hips.length < 2) return 0;
+
+    const shoulderCenter = {
+      x: (shoulders[0].x + shoulders[1].x) / 2,
+      y: (shoulders[0].y + shoulders[1].y) / 2,
+    };
+
+    const hipCenter = {
+      x: (hips[0].x + hips[1].x) / 2,
+      y: (hips[0].y + hips[1].y) / 2,
+    };
+
+    // Calculate angle from vertical
+    const dx = hipCenter.x - shoulderCenter.x;
+    const dy = hipCenter.y - shoulderCenter.y;
+    const angleRadians = Math.atan2(dx, dy);
+    const angleDegrees = Math.abs((angleRadians * 180) / Math.PI);
+
+    return angleDegrees;
+  };
+
+  // Get keypoint by name with confidence check
+  const getKeypoint = (keypoints: Keypoint[], name: string): Keypoint | null => {
+    const kp = keypoints.find((k) => k.name === name);
+    if (!kp || !kp.score || kp.score < 0.3) return null;
+    return kp;
+  };
+
+  // ========== END HELPER FUNCTIONS ==========
+
   // Main detection loop with fall detection heuristic
   const runDetection = async () => {
     if (!videoRef.current || !canvasRef.current || !poseModelRef.current || !isDetectingRef.current) {
@@ -359,8 +434,20 @@ export default function RealtimeStreamPage() {
           }
         });
 
-        // FALL DETECTION HEURISTIC
-        detectFall(keypoints);
+        // ========== MULTI-DETECTION SYSTEM ==========
+        // Run all detection algorithms
+        detectEnhancedFall(keypoints, canvas.height);
+        detectPersonOnGround(keypoints, canvas.height);
+        detectHandsRaised(keypoints);
+        // ========== END MULTI-DETECTION ==========
+
+        // Store keypoints for next frame comparison
+        previousKeypointsRef.current = keypoints.map((kp) => ({
+          x: kp.x,
+          y: kp.y,
+          score: kp.score || 0,
+          name: kp.name,
+        }));
       }
     } catch (err) {
       console.error("Detection error:", err);
@@ -370,32 +457,42 @@ export default function RealtimeStreamPage() {
     detectionFrameRef.current = requestAnimationFrame(runDetection);
   };
 
-  // Fall detection algorithm
-  const detectFall = (keypoints: Keypoint[]) => {
-    // Find the nose keypoint (most reliable for tracking head position)
-    const nose = keypoints.find((kp) => kp.name === "nose");
+  // ========== DETECTION ALGORITHMS ==========
 
-    if (!nose || !nose.score || nose.score < 0.3) {
-      return; // Not confident enough in detection
+  // 1. Enhanced Fall Detection (using center of mass)
+  const detectEnhancedFall = (keypoints: Keypoint[], canvasHeight: number) => {
+    // Calculate center of mass from torso keypoints
+    const centerOfMass = calculateCenterOfMass(keypoints);
+    if (!centerOfMass) {
+      return; // Not enough torso keypoints detected
     }
 
-    // Track Y position history
-    noseYHistoryRef.current.push(nose.y);
-    if (noseYHistoryRef.current.length > HISTORY_LENGTH) {
-      noseYHistoryRef.current.shift();
+    // Calculate person height for adaptive threshold
+    const personHeight = calculatePersonHeight(keypoints);
+    if (personHeight === 0) {
+      return; // Can't determine person height
+    }
+
+    // Track center of mass position history
+    centerOfMassHistoryRef.current.push(centerOfMass);
+    if (centerOfMassHistoryRef.current.length > HISTORY_LENGTH) {
+      centerOfMassHistoryRef.current.shift();
     }
 
     // Need at least 2 frames to calculate velocity
-    if (noseYHistoryRef.current.length < 2) {
+    if (centerOfMassHistoryRef.current.length < 2) {
       return;
     }
 
     // Calculate vertical velocity (positive = falling down)
-    const recentHistory = noseYHistoryRef.current.slice(-2);
-    const velocity = recentHistory[1] - recentHistory[0];
+    const recentHistory = centerOfMassHistoryRef.current.slice(-2);
+    const velocityY = recentHistory[1].y - recentHistory[0].y;
+
+    // Adaptive threshold: 15% of person height per frame
+    const adaptiveThreshold = personHeight * FALL_VELOCITY_THRESHOLD;
 
     // Check for rapid downward movement
-    if (velocity > FALL_VELOCITY_THRESHOLD) {
+    if (velocityY > adaptiveThreshold) {
       // Additional check: body should be more horizontal than vertical
       const shoulders = keypoints.filter((kp) =>
         kp.name?.includes("shoulder") && kp.score && kp.score > 0.3
@@ -405,19 +502,16 @@ export default function RealtimeStreamPage() {
       );
 
       if (shoulders.length >= 2 && hips.length >= 2) {
-        // Calculate body orientation
-        const shoulderWidth = Math.abs(shoulders[0].x - shoulders[1].x);
-        const bodyHeight = Math.abs(
-          (shoulders[0].y + shoulders[1].y) / 2 - (hips[0].y + hips[1].y) / 2
-        );
+        // Calculate body angle
+        const bodyAngle = calculateBodyAngle(shoulders, hips);
 
-        // If width > height, body is horizontal (likely fallen)
-        if (shoulderWidth > bodyHeight * 1.5) {
+        // If body angle > 60 degrees from vertical, person is tilted/horizontal
+        if (bodyAngle > 60) {
           // Calculate average confidence from all relevant keypoints
-          const relevantKeypoints = [nose, ...shoulders, ...hips];
+          const relevantKeypoints = [...shoulders, ...hips];
           const avgConfidence = relevantKeypoints.reduce((sum, kp) => sum + (kp.score || 0), 0) / relevantKeypoints.length;
 
-          triggerFallEvent(velocity, avgConfidence, shoulderWidth / bodyHeight);
+          triggerFallEvent(velocityY, avgConfidence, bodyAngle, personHeight);
         }
       }
     } else {
@@ -428,8 +522,100 @@ export default function RealtimeStreamPage() {
     }
   };
 
+  // 2. Person on Ground Detection (medical emergency)
+  const detectPersonOnGround = (keypoints: Keypoint[], canvasHeight: number) => {
+    const shoulders = keypoints.filter((kp) =>
+      kp.name?.includes("shoulder") && kp.score && kp.score > 0.3
+    );
+    const hips = keypoints.filter((kp) =>
+      kp.name?.includes("hip") && kp.score && kp.score > 0.3
+    );
+
+    if (shoulders.length < 2 || hips.length < 2) {
+      // Reset timer if we can't detect body
+      personOnGroundStartTimeRef.current = 0;
+      return;
+    }
+
+    // Calculate body angle
+    const bodyAngle = calculateBodyAngle(shoulders, hips);
+
+    // Calculate hip height (average Y position)
+    const hipHeight = (hips[0].y + hips[1].y) / 2;
+
+    // Check if person is horizontal and low to ground
+    const isHorizontal = bodyAngle > 60; // More than 60 degrees from vertical
+    const isLowToGround = hipHeight > (canvasHeight * 0.6); // Bottom 40% of frame
+
+    if (isHorizontal && isLowToGround) {
+      const now = Date.now();
+
+      // Start timer if this is the first detection
+      if (personOnGroundStartTimeRef.current === 0) {
+        personOnGroundStartTimeRef.current = now;
+      }
+
+      // Check if person has been on ground for 5+ seconds
+      const duration = now - personOnGroundStartTimeRef.current;
+      if (duration >= PERSON_ON_GROUND_DURATION) {
+        // Debounce: avoid duplicate alerts
+        if (now - lastPersonOnGroundAlertRef.current >= 10000) {
+          lastPersonOnGroundAlertRef.current = now;
+          triggerPersonOnGroundEvent(duration);
+        }
+      }
+    } else {
+      // Reset timer if person is no longer on ground
+      personOnGroundStartTimeRef.current = 0;
+    }
+  };
+
+  // 3. Hands Raised Detection (distress/robbery)
+  const detectHandsRaised = (keypoints: Keypoint[]) => {
+    const leftWrist = getKeypoint(keypoints, "left_wrist");
+    const rightWrist = getKeypoint(keypoints, "right_wrist");
+    const leftShoulder = getKeypoint(keypoints, "left_shoulder");
+    const rightShoulder = getKeypoint(keypoints, "right_shoulder");
+    const nose = getKeypoint(keypoints, "nose");
+
+    if (!leftWrist || !rightWrist || !leftShoulder || !rightShoulder || !nose) {
+      // Reset timer if we can't detect all necessary keypoints
+      handsRaisedStartTimeRef.current = 0;
+      return;
+    }
+
+    // Check if both hands are raised above shoulders
+    const leftHandRaised = leftWrist.y < leftShoulder.y - 30; // 30px above shoulder
+    const rightHandRaised = rightWrist.y < rightShoulder.y - 30;
+
+    // Also check if hands are above head (more dramatic)
+    const handsAboveHead = leftWrist.y < nose.y && rightWrist.y < nose.y;
+
+    if ((leftHandRaised && rightHandRaised) || handsAboveHead) {
+      const now = Date.now();
+
+      // Start timer if this is the first detection
+      if (handsRaisedStartTimeRef.current === 0) {
+        handsRaisedStartTimeRef.current = now;
+      }
+
+      // Check if hands have been raised for 2+ seconds
+      const duration = now - handsRaisedStartTimeRef.current;
+      if (duration >= HANDS_RAISED_DURATION) {
+        // Debounce: avoid duplicate alerts
+        if (now - lastHandsRaisedAlertRef.current >= 5000) {
+          lastHandsRaisedAlertRef.current = now;
+          triggerHandsRaisedEvent(duration, handsAboveHead);
+        }
+      }
+    } else {
+      // Reset timer if hands are no longer raised
+      handsRaisedStartTimeRef.current = 0;
+    }
+  };
+
   // Trigger fall event with dynamic confidence calculation
-  const triggerFallEvent = (velocity: number, keypointConfidence: number, orientationRatio: number) => {
+  const triggerFallEvent = (velocity: number, keypointConfidence: number, bodyAngle: number, personHeight: number) => {
     // Debounce: Avoid duplicate events within 3 seconds using ref (synchronous)
     const now = Date.now();
     if (now - lastFallTimeRef.current < 3000) {
@@ -440,17 +626,17 @@ export default function RealtimeStreamPage() {
     const currentTime = getElapsedTime();
 
     // Calculate dynamic confidence based on detection quality
-    // Factors: velocity magnitude, keypoint confidence, body orientation
-    const velocityScore = Math.min(velocity / 30, 1.0); // Normalize velocity (0-30px)
-    const orientationScore = Math.min((orientationRatio - 1.5) / 2, 1.0); // Normalize orientation ratio
-    const finalConfidence = (keypointConfidence * 0.4 + velocityScore * 0.3 + orientationScore * 0.3);
+    // Factors: velocity magnitude, keypoint confidence, body angle
+    const velocityScore = Math.min(velocity / (personHeight * 0.3), 1.0); // Normalize velocity relative to height
+    const angleScore = Math.min((bodyAngle - 60) / 30, 1.0); // Normalize angle (60-90 degrees)
+    const finalConfidence = (keypointConfidence * 0.4 + velocityScore * 0.3 + angleScore * 0.3);
     const clampedConfidence = Math.max(0.5, Math.min(0.95, finalConfidence)); // Clamp between 0.5-0.95
 
     setFallStatus("⚠️ FALL DETECTED");
 
     const newEvent: DetectedEvent = {
       timestamp: currentTime,
-      description: "Person fell detected",
+      description: "Sudden fall detected",
       isDangerous: true,
       confidence: clampedConfidence,
       source: "heuristic",
@@ -461,7 +647,7 @@ export default function RealtimeStreamPage() {
     // Auto-clear fall status after 2 seconds
     setTimeout(() => setFallStatus(null), 2000);
 
-    console.log("🚨 FALL DETECTED at", currentTime, "| Confidence:", (clampedConfidence * 100).toFixed(1) + "%", "| Velocity:", velocity.toFixed(1) + "px");
+    console.log("🚨 FALL DETECTED at", currentTime, "| Confidence:", (clampedConfidence * 100).toFixed(1) + "%", "| Velocity:", velocity.toFixed(1) + "px", "| Angle:", bodyAngle.toFixed(1) + "°");
 
     // --- INSTANT EMAIL NOTIFICATION FOR DANGEROUS EVENTS ---
     // If the event is dangerous, send the email notification
@@ -497,6 +683,115 @@ export default function RealtimeStreamPage() {
     // --- END OF EMAIL NOTIFICATION CODE ---
   };
 
+  // Trigger person on ground event
+  const triggerPersonOnGroundEvent = (duration: number) => {
+    const currentTime = getElapsedTime();
+
+    setFallStatus("⚠️ PERSON ON GROUND");
+
+    const newEvent: DetectedEvent = {
+      timestamp: currentTime,
+      description: `Person on ground for ${Math.round(duration / 1000)}s - possible medical emergency`,
+      isDangerous: true,
+      confidence: 0.85,
+      source: "heuristic",
+    };
+
+    setEvents((prev) => [...prev, newEvent]);
+
+    // Auto-clear status after 3 seconds
+    setTimeout(() => setFallStatus(null), 3000);
+
+    console.log("🚨 PERSON ON GROUND at", currentTime, "| Duration:", Math.round(duration / 1000) + "s");
+
+    // Send email notification
+    if (newEvent.isDangerous) {
+      console.log("DANGEROUS EVENT: Sending notification...");
+      try {
+        fetch("/api/send-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventDescription: newEvent.description,
+            timestamp: newEvent.timestamp,
+            frameImage: "",
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              console.log("✅ Notification sent successfully.");
+            } else {
+              console.warn("⚠️ Notification failed:", data.error);
+            }
+          })
+          .catch((error) => {
+            console.error("❌ Failed to send notification:", error);
+          });
+      } catch (error) {
+        console.error("❌ Failed to send notification:", error);
+      }
+    }
+  };
+
+  // Trigger hands raised event
+  const triggerHandsRaisedEvent = (duration: number, handsAboveHead: boolean) => {
+    const currentTime = getElapsedTime();
+
+    setFallStatus("⚠️ HANDS RAISED");
+
+    const description = handsAboveHead
+      ? `Hands raised above head for ${Math.round(duration / 1000)}s - possible distress signal`
+      : `Hands raised for ${Math.round(duration / 1000)}s - possible robbery/threat`;
+
+    const newEvent: DetectedEvent = {
+      timestamp: currentTime,
+      description: description,
+      isDangerous: true,
+      confidence: handsAboveHead ? 0.80 : 0.75,
+      source: "heuristic",
+    };
+
+    setEvents((prev) => [...prev, newEvent]);
+
+    // Auto-clear status after 3 seconds
+    setTimeout(() => setFallStatus(null), 3000);
+
+    console.log("🚨 HANDS RAISED at", currentTime, "| Duration:", Math.round(duration / 1000) + "s", "| Above head:", handsAboveHead);
+
+    // Send email notification
+    if (newEvent.isDangerous) {
+      console.log("DANGEROUS EVENT: Sending notification...");
+      try {
+        fetch("/api/send-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventDescription: newEvent.description,
+            timestamp: newEvent.timestamp,
+            frameImage: "",
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              console.log("✅ Notification sent successfully.");
+            } else {
+              console.warn("⚠️ Notification failed:", data.error);
+            }
+          })
+          .catch((error) => {
+            console.error("❌ Failed to send notification:", error);
+          });
+      } catch (error) {
+        console.error("❌ Failed to send notification:", error);
+      }
+    }
+  };
 
   // Phase 2: Analyze frame with VLM
   const analyzeFrameWithVLM = async () => {
@@ -691,8 +986,12 @@ export default function RealtimeStreamPage() {
     setStartTime(Date.now());
     setEvents([]);
     setFallStatus(null);
-    noseYHistoryRef.current = [];
+    centerOfMassHistoryRef.current = [];
     lastFallTimeRef.current = 0; // Reset fall detection debounce
+    personOnGroundStartTimeRef.current = 0; // Reset person on ground timer
+    handsRaisedStartTimeRef.current = 0; // Reset hands raised timer
+    lastPersonOnGroundAlertRef.current = 0; // Reset debounce
+    lastHandsRaisedAlertRef.current = 0; // Reset debounce
 
     console.log("📊 State updated: isDetecting=true, startTime=", Date.now());
 
