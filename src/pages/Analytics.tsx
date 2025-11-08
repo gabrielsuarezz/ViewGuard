@@ -223,8 +223,8 @@ const Analytics = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-foreground">9/9</div>
-            <p className="text-xs text-muted-foreground">All operational</p>
+            <div className="text-3xl font-bold text-foreground">8/9</div>
+            <p className="text-xs text-muted-foreground">1 camera offline</p>
           </CardContent>
         </Card>
 
