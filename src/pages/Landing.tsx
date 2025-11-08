@@ -1,33 +1,26 @@
 import { Button } from "@/components/ui/button";
 import { Shield, Eye, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
-
 const Landing = () => {
-  return (
-    <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center">
+  return <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center">
       {/* Animated Grid Background */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-20" 
-           style={{
-             backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px), 
+      <div className="absolute inset-0 bg-grid-pattern opacity-20" style={{
+      backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px), 
                              linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`,
-             backgroundSize: '50px 50px',
-             animation: 'grid-move 20s linear infinite'
-           }} />
+      backgroundSize: '50px 50px',
+      animation: 'grid-move 20s linear infinite'
+    }} />
       
       {/* Floating Particles */}
       <div className="absolute inset-0 pointer-events-none">
-        {Array.from({ length: 30 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-primary rounded-full opacity-60"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`,
-              animation: "float-particle 15s linear infinite"
-            }}
-          />
-        ))}
+        {Array.from({
+        length: 30
+      }).map((_, i) => <div key={i} className="absolute w-1 h-1 bg-primary rounded-full opacity-60" style={{
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        animationDelay: `${Math.random() * 10}s`,
+        animation: "float-particle 15s linear infinite"
+      }} />)}
       </div>
 
       {/* Radial Gradient Overlay */}
@@ -44,9 +37,7 @@ const Landing = () => {
             <div className="w-24 h-24 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center glow-cyber">
               <Shield className="w-12 h-12 text-primary" />
             </div>
-            <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-alert-high/20 border border-alert-high flex items-center justify-center animate-pulse-glow">
-              <Eye className="w-4 h-4 text-alert-high" />
-            </div>
+            
           </div>
         </div>
 
@@ -85,11 +76,7 @@ const Landing = () => {
 
         {/* CTA Button */}
         <div className="pt-8">
-          <Button
-            asChild
-            size="lg"
-            className="text-lg px-12 py-6 h-auto bg-primary text-primary-foreground hover:bg-primary/90 glow-cyber animate-pulse-glow"
-          >
+          <Button asChild size="lg" className="text-lg px-12 py-6 h-auto bg-primary text-primary-foreground hover:bg-primary/90 glow-cyber animate-pulse-glow">
             <Link to="/monitor">
               Get Started
             </Link>
@@ -107,8 +94,6 @@ const Landing = () => {
 
       {/* Film Grain */}
       <div className="film-grain pointer-events-none" />
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
