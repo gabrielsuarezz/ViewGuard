@@ -2,36 +2,9 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, TrendingUp, MapPin, Clock, AlertTriangle, Activity, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState("24h");
   const [isLiveUpdate, setIsLiveUpdate] = useState(false);
@@ -42,85 +15,113 @@ const Analytics = () => {
     const interval = setInterval(() => {
       setIsLiveUpdate(true);
       setLastUpdateTime(new Date());
-      
       setTimeout(() => {
         setIsLiveUpdate(false);
       }, 2000);
     }, 8000);
-
     return () => clearInterval(interval);
   }, []);
 
   // Mock data for charts
-  const detectionTrends = [
-    { time: "00:00", theft: 2, fight: 1, robbery: 0, fall: 1 },
-    { time: "04:00", theft: 1, fight: 0, robbery: 1, fall: 0 },
-    { time: "08:00", theft: 4, fight: 2, robbery: 1, fall: 1 },
-    { time: "12:00", theft: 6, fight: 3, robbery: 2, fall: 2 },
-    { time: "16:00", theft: 8, fight: 4, robbery: 1, fall: 1 },
-    { time: "20:00", theft: 5, fight: 2, robbery: 3, fall: 0 },
-  ];
-
-  const cameraActivity = [
-    { camera: "CAM 1", incidents: 12 },
-    { camera: "CAM 2", incidents: 8 },
-    { camera: "CAM 3", incidents: 15 },
-    { camera: "CAM 4", incidents: 22 },
-    { camera: "CAM 5", incidents: 6 },
-    { camera: "CAM 6", incidents: 18 },
-    { camera: "CAM 7", incidents: 10 },
-    { camera: "CAM 8", incidents: 14 },
-    { camera: "CAM 9", incidents: 9 },
-  ];
-
-  const detectionTypes = [
-    { 
-      name: "THEFT", 
-      value: 45, 
-      color: "hsl(var(--alert-high))",
-      cameras: ["CAM 1", "CAM 4", "CAM 6", "CAM 8"],
-      topCamera: "CAM 4",
-      topCameraCount: 12,
-      avgResponseTime: "2.1s"
-    },
-    { 
-      name: "FIGHT", 
-      value: 28, 
-      color: "hsl(var(--alert-medium))",
-      cameras: ["CAM 2", "CAM 3", "CAM 7"],
-      topCamera: "CAM 3",
-      topCameraCount: 11,
-      avgResponseTime: "1.8s"
-    },
-    { 
-      name: "ROBBERY", 
-      value: 18, 
-      color: "hsl(var(--alert-low))",
-      cameras: ["CAM 1", "CAM 5", "CAM 9"],
-      topCamera: "CAM 1",
-      topCameraCount: 8,
-      avgResponseTime: "2.5s"
-    },
-    { 
-      name: "FALL", 
-      value: 9, 
-      color: "hsl(var(--primary))",
-      cameras: ["CAM 2", "CAM 6"],
-      topCamera: "CAM 6",
-      topCameraCount: 6,
-      avgResponseTime: "1.5s"
-    },
-  ];
-
-  const heatmapData = [
-    [0, 1, 0, 2, 1, 0, 3, 1, 0],
-    [1, 0, 2, 1, 0, 1, 0, 2, 1],
-    [0, 2, 1, 0, 3, 2, 1, 0, 2],
-    [2, 1, 0, 4, 2, 1, 0, 3, 1],
-    [1, 0, 3, 2, 1, 0, 2, 1, 0],
-    [0, 2, 1, 0, 2, 3, 1, 0, 2],
-  ];
-
+  const detectionTrends = [{
+    time: "00:00",
+    theft: 2,
+    fight: 1,
+    robbery: 0,
+    fall: 1
+  }, {
+    time: "04:00",
+    theft: 1,
+    fight: 0,
+    robbery: 1,
+    fall: 0
+  }, {
+    time: "08:00",
+    theft: 4,
+    fight: 2,
+    robbery: 1,
+    fall: 1
+  }, {
+    time: "12:00",
+    theft: 6,
+    fight: 3,
+    robbery: 2,
+    fall: 2
+  }, {
+    time: "16:00",
+    theft: 8,
+    fight: 4,
+    robbery: 1,
+    fall: 1
+  }, {
+    time: "20:00",
+    theft: 5,
+    fight: 2,
+    robbery: 3,
+    fall: 0
+  }];
+  const cameraActivity = [{
+    camera: "CAM 1",
+    incidents: 12
+  }, {
+    camera: "CAM 2",
+    incidents: 8
+  }, {
+    camera: "CAM 3",
+    incidents: 15
+  }, {
+    camera: "CAM 4",
+    incidents: 22
+  }, {
+    camera: "CAM 5",
+    incidents: 6
+  }, {
+    camera: "CAM 6",
+    incidents: 18
+  }, {
+    camera: "CAM 7",
+    incidents: 10
+  }, {
+    camera: "CAM 8",
+    incidents: 14
+  }, {
+    camera: "CAM 9",
+    incidents: 9
+  }];
+  const detectionTypes = [{
+    name: "THEFT",
+    value: 45,
+    color: "hsl(var(--alert-high))",
+    cameras: ["CAM 1", "CAM 4", "CAM 6", "CAM 8"],
+    topCamera: "CAM 4",
+    topCameraCount: 12,
+    avgResponseTime: "2.1s"
+  }, {
+    name: "FIGHT",
+    value: 28,
+    color: "hsl(var(--alert-medium))",
+    cameras: ["CAM 2", "CAM 3", "CAM 7"],
+    topCamera: "CAM 3",
+    topCameraCount: 11,
+    avgResponseTime: "1.8s"
+  }, {
+    name: "ROBBERY",
+    value: 18,
+    color: "hsl(var(--alert-low))",
+    cameras: ["CAM 1", "CAM 5", "CAM 9"],
+    topCamera: "CAM 1",
+    topCameraCount: 8,
+    avgResponseTime: "2.5s"
+  }, {
+    name: "FALL",
+    value: 9,
+    color: "hsl(var(--primary))",
+    cameras: ["CAM 2", "CAM 6"],
+    topCamera: "CAM 6",
+    topCameraCount: 6,
+    avgResponseTime: "1.5s"
+  }];
+  const heatmapData = [[0, 1, 0, 2, 1, 0, 3, 1, 0], [1, 0, 2, 1, 0, 1, 0, 2, 1], [0, 2, 1, 0, 3, 2, 1, 0, 2], [2, 1, 0, 4, 2, 1, 0, 3, 1], [1, 0, 3, 2, 1, 0, 2, 1, 0], [0, 2, 1, 0, 2, 3, 1, 0, 2]];
   const getHeatmapColor = (value: number) => {
     if (value === 0) return "bg-muted/30";
     if (value === 1) return "bg-alert-low/30";
@@ -128,29 +129,19 @@ const Analytics = () => {
     if (value === 3) return "bg-alert-medium/60";
     return "bg-alert-high/80";
   };
-
-  return (
-    <div className="min-h-screen bg-background p-4 md:p-6 cyber-bg">
+  return <div className="min-h-screen bg-background p-4 md:p-6 cyber-bg">
       {/* Header */}
       <header className="mb-6 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild
-                className="text-foreground hover:text-primary"
-              >
+              <Button variant="ghost" size="icon" asChild className="text-foreground hover:text-primary">
                 <Link to="/">
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
               </Button>
               <Button variant="outline" size="sm" asChild className="gap-2">
-                <Link to="/reports">
-                  <FileText className="w-4 h-4" />
-                  Reports
-                </Link>
+                
               </Button>
             </div>
             <div>
@@ -163,30 +154,18 @@ const Analytics = () => {
             {/* Live Update Indicator */}
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card/80 border border-border backdrop-blur-sm">
               <div className="relative flex items-center justify-center w-5 h-5">
-                <div 
-                  className={`absolute w-3 h-3 rounded-full transition-all duration-300 ${
-                    isLiveUpdate 
-                      ? 'bg-green-500 shadow-[0_0_12px_rgba(34,197,94,0.8)]' 
-                      : 'bg-green-500/40'
-                  }`}
-                />
-                {isLiveUpdate && (
-                  <>
+                <div className={`absolute w-3 h-3 rounded-full transition-all duration-300 ${isLiveUpdate ? 'bg-green-500 shadow-[0_0_12px_rgba(34,197,94,0.8)]' : 'bg-green-500/40'}`} />
+                {isLiveUpdate && <>
                     <div className="absolute w-3 h-3 rounded-full bg-green-500 animate-ping opacity-75" />
                     <div className="absolute w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                  </>
-                )}
+                  </>}
               </div>
               <div className="text-xs">
                 <div className={`font-semibold transition-colors ${isLiveUpdate ? 'text-green-500' : 'text-foreground'}`}>
-                  {isLiveUpdate ? (
-                    <span className="flex items-center gap-1">
+                  {isLiveUpdate ? <span className="flex items-center gap-1">
                       <Activity className="w-3 h-3 animate-pulse" />
                       Updating...
-                    </span>
-                  ) : (
-                    'Live'
-                  )}
+                    </span> : 'Live'}
                 </div>
                 <div className="text-muted-foreground">
                   {lastUpdateTime.toLocaleTimeString()}
@@ -275,52 +254,23 @@ const Analytics = () => {
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={detectionTrends}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="time"
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    color: "hsl(var(--foreground))",
-                  }}
-                />
+                <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" style={{
+                fontSize: "12px"
+              }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" style={{
+                fontSize: "12px"
+              }} />
+                <Tooltip contentStyle={{
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px",
+                color: "hsl(var(--foreground))"
+              }} />
                 <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="theft"
-                  stroke="hsl(var(--alert-high))"
-                  strokeWidth={2}
-                  name="Theft"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="fight"
-                  stroke="hsl(var(--alert-medium))"
-                  strokeWidth={2}
-                  name="Fight"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="robbery"
-                  stroke="hsl(var(--alert-low))"
-                  strokeWidth={2}
-                  name="Robbery"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="fall"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  name="Fall"
-                />
+                <Line type="monotone" dataKey="theft" stroke="hsl(var(--alert-high))" strokeWidth={2} name="Theft" />
+                <Line type="monotone" dataKey="fight" stroke="hsl(var(--alert-medium))" strokeWidth={2} name="Fight" />
+                <Line type="monotone" dataKey="robbery" stroke="hsl(var(--alert-low))" strokeWidth={2} name="Robbery" />
+                <Line type="monotone" dataKey="fall" stroke="hsl(var(--primary))" strokeWidth={2} name="Fall" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -336,23 +286,18 @@ const Analytics = () => {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={cameraActivity}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis
-                  dataKey="camera"
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  style={{ fontSize: "12px" }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    color: "hsl(var(--foreground))",
-                  }}
-                />
+                <XAxis dataKey="camera" stroke="hsl(var(--muted-foreground))" style={{
+                fontSize: "12px"
+              }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" style={{
+                fontSize: "12px"
+              }} />
+                <Tooltip contentStyle={{
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                borderRadius: "8px",
+                color: "hsl(var(--foreground))"
+              }} />
                 <Bar dataKey="incidents" fill="hsl(var(--primary))" fillOpacity={0.8} radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -371,33 +316,19 @@ const Analytics = () => {
           <CardContent className="flex items-center justify-center">
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
-                <Pie
-                  data={detectionTypes}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
-                  }
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                  className="cursor-pointer"
-                >
-                  {detectionTypes.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.color}
-                      className="hover:opacity-80 transition-opacity"
-                    />
-                  ))}
+                <Pie data={detectionTypes} cx="50%" cy="50%" labelLine={false} label={({
+                name,
+                percent
+              }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={100} fill="#8884d8" dataKey="value" className="cursor-pointer">
+                  {detectionTypes.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} className="hover:opacity-80 transition-opacity" />)}
                 </Pie>
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-card border border-border rounded-lg p-4 shadow-lg">
+                <Tooltip content={({
+                active,
+                payload
+              }) => {
+                if (active && payload && payload.length) {
+                  const data = payload[0].payload;
+                  return <div className="bg-card border border-border rounded-lg p-4 shadow-lg">
                           <h3 className="font-bold text-foreground text-lg mb-2">
                             {data.name}
                           </h3>
@@ -414,23 +345,16 @@ const Analytics = () => {
                             <div className="mt-2 pt-2 border-t border-border">
                               <p className="text-muted-foreground text-xs mb-1">Active Cameras:</p>
                               <div className="flex flex-wrap gap-1">
-                                {data.cameras.map((cam: string) => (
-                                  <span 
-                                    key={cam}
-                                    className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded"
-                                  >
+                                {data.cameras.map((cam: string) => <span key={cam} className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
                                     {cam}
-                                  </span>
-                                ))}
+                                  </span>)}
                               </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
+                        </div>;
+                }
+                return null;
+              }} />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
@@ -445,32 +369,17 @@ const Analytics = () => {
           <CardContent>
             <div className="space-y-2">
               <div className="grid grid-cols-9 gap-2">
-                {Array.from({ length: 9 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="text-center text-[10px] text-muted-foreground font-mono"
-                  >
+                {Array.from({
+                length: 9
+              }, (_, i) => <div key={i} className="text-center text-[10px] text-muted-foreground font-mono">
                     C{i + 1}
-                  </div>
-                ))}
+                  </div>)}
               </div>
-              {heatmapData.map((row, rowIndex) => (
-                <div key={rowIndex} className="grid grid-cols-9 gap-2">
-                  {row.map((value, colIndex) => (
-                    <div
-                      key={colIndex}
-                      className={`aspect-square rounded ${getHeatmapColor(
-                        value
-                      )} flex items-center justify-center text-xs font-semibold ${
-                        value > 0 ? "text-foreground" : "text-muted-foreground"
-                      }`}
-                      title={`Camera ${colIndex + 1}: ${value} incidents`}
-                    >
+              {heatmapData.map((row, rowIndex) => <div key={rowIndex} className="grid grid-cols-9 gap-2">
+                  {row.map((value, colIndex) => <div key={colIndex} className={`aspect-square rounded ${getHeatmapColor(value)} flex items-center justify-center text-xs font-semibold ${value > 0 ? "text-foreground" : "text-muted-foreground"}`} title={`Camera ${colIndex + 1}: ${value} incidents`}>
                       {value > 0 ? value : ""}
-                    </div>
-                  ))}
-                </div>
-              ))}
+                    </div>)}
+                </div>)}
               <div className="flex items-center justify-between pt-4 text-xs text-muted-foreground">
                 <span>Low activity</span>
                 <div className="flex items-center gap-2">
@@ -485,8 +394,6 @@ const Analytics = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Analytics;
