@@ -28,12 +28,11 @@ const Landing = () => {
           <Button 
             asChild 
             size="lg" 
-            className="group relative text-lg px-14 py-7 h-auto rounded-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:from-primary/90 hover:to-primary/70 transition-all duration-500 shadow-[0_0_40px_hsl(var(--primary)/0.6)] hover:shadow-[0_0_60px_hsl(var(--primary)/0.9)] hover:scale-110 font-semibold tracking-wide"
+            className="group relative text-lg px-14 py-7 h-auto rounded-full bg-gradient-to-r from-blue-500 to-blue-900 text-white hover:from-blue-600 hover:to-blue-950 transition-all duration-500 shadow-[0_0_40px_rgba(59,130,246,0.6)] hover:shadow-[0_0_60px_rgba(59,130,246,0.9)] hover:scale-110 font-bold tracking-wide"
           >
             <Link to="/monitor" className="flex items-center gap-3">
               <span className="relative z-10">Get Started</span>
-              <span className="text-2xl transition-transform duration-500 group-hover:translate-x-1">→</span>
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/0 via-white/20 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/0 via-white/20 to-blue-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </Link>
           </Button>
         </div>
