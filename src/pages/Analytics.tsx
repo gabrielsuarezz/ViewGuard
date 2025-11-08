@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, TrendingUp, MapPin, Clock, AlertTriangle, Activity } from "lucide-react";
+import { ArrowLeft, TrendingUp, MapPin, Clock, AlertTriangle, Activity, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -135,16 +135,24 @@ const Analytics = () => {
       <header className="mb-6 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              asChild
-              className="text-foreground hover:text-primary"
-            >
-              <Link to="/">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="text-foreground hover:text-primary"
+              >
+                <Link to="/">
+                  <ArrowLeft className="w-5 h-5" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild className="gap-2">
+                <Link to="/reports">
+                  <FileText className="w-4 h-4" />
+                  Reports
+                </Link>
+              </Button>
+            </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Analytics Dashboard</h1>
               <p className="text-xs text-muted-foreground">Detection trends and insights</p>

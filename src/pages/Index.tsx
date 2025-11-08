@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
-import { Shield, BarChart3, Video } from "lucide-react";
+import { Shield, BarChart3, Video, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import CCTVTile, { Detection } from "@/components/CCTVTile";
 import NotificationsPanel, { Notification } from "@/components/NotificationsPanel";
 import CameraModal from "@/components/CameraModal";
+import { useReports } from "@/contexts/ReportsContext";
 
 const Index = () => {
+  const { addReport } = useReports();
   const [detections, setDetections] = useState<Record<number, Detection | null>>({});
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [highlightedCamera, setHighlightedCamera] = useState<number | null>(null);
@@ -75,6 +77,15 @@ const Index = () => {
   };
 
   const handleReport = (id: string) => {
+    const notification = notifications.find((n) => n.id === id);
+    if (notification) {
+      addReport({
+        id: notification.id,
+        cameraId: notification.cameraId,
+        detection: notification.detection,
+        timestamp: notification.timestamp,
+      });
+    }
     setNotifications((prev) => prev.filter((n) => n.id !== id));
     toast.success("False positive reported");
   };
@@ -109,6 +120,17 @@ const Index = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="gap-2"
+            >
+              <Link to="/reports">
+                <FileText className="w-4 h-4" />
+                Reports
+              </Link>
+            </Button>
             <Button
               variant="outline"
               size="sm"
