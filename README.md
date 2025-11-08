@@ -24,7 +24,7 @@ AI-powered CCTV monitoring dashboard with real-time threat detection.
 2. **Notification**: Alert added to right panel, toast shown
 3. **Highlight**: Camera tile border pulses briefly
 4. **Auto-clear**: Detection overlay disappears after 8 seconds
-5. **Actions**: User can `Dismiss` or `Report false positive`
+5. **Actions**: User can `Dismiss` or `Report` to alert security
 
 ## Keyboard Shortcuts
 
