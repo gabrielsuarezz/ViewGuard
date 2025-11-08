@@ -331,12 +331,12 @@ const Analytics = () => {
             <CardDescription>Distribution of incident types</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height={550}>
               <PieChart>
                 <Pie data={detectionTypes} cx="50%" cy="50%" labelLine={false} label={({
                 name,
                 percent
-              }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={140} fill="#8884d8" dataKey="value" className="cursor-pointer">
+              }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={210} fill="#8884d8" dataKey="value" className="cursor-pointer">
                   {detectionTypes.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} className="hover:opacity-80 transition-opacity" />)}
                 </Pie>
                 <Tooltip content={({
