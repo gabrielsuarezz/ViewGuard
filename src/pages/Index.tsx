@@ -95,7 +95,7 @@ const Index = () => {
               <Shield className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground tracking-wider">ViewGuard<span className="text-primary">AI</span></h1>
+              <h1 className="text-2xl font-bold text-foreground tracking-wider">View<span className="text-primary">Guard</span></h1>
               <p className="text-xs text-muted-foreground uppercase tracking-widest">Neural Surveillance Grid</p>
             </div>
           </Link>

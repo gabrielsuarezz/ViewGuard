@@ -164,9 +164,9 @@ const Landing = () => {
         <div className="space-y-2">
           <h1 className="text-8xl md:text-9xl font-bold tracking-tight leading-none">
             <span 
-              className="inline-block text-white"
+              className="inline-block text-foreground"
               style={{
-                textShadow: '0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(255,255,255,0.2)'
+                textShadow: '0 0 20px rgba(255,255,255,0.3), 0 0 40px rgba(255,255,255,0.1)'
               }}
             >
               View
