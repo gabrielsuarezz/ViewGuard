@@ -49,16 +49,16 @@ const Landing = () => {
               View
             </span>
             <span 
-              className="inline-block text-blue-500"
+              className="inline-block text-primary"
               style={{
-                textShadow: '0 0 20px rgba(59,130,246,0.8), 0 0 40px rgba(59,130,246,0.4)'
+                textShadow: '0 0 20px hsl(var(--primary) / 0.8), 0 0 40px hsl(var(--primary) / 0.4)'
               }}
             >
               Guard
             </span>
           </h1>
-          <p className="text-muted-foreground text-lg md:text-xl tracking-widest font-light">
-            ADVANCED SURVEILLANCE SYSTEM
+          <p className="text-muted-foreground text-lg md:text-xl tracking-widest font-light overflow-hidden">
+            <span className="inline-block animate-typing">ADVANCED SURVEILLANCE SYSTEM</span>
           </p>
         </div>
 
