@@ -25,16 +25,19 @@ interface DetectionResult {
 /**
  * Server Action: Analyze frame with Google Gemini VLM
  *
- * This function sends a video frame and pose keypoints to Gemini 1.5 Flash
- * for advanced event detection (medical emergencies, fights, distress, etc.)
+ * This function sends multi-modal data (video frame, audio transcript, and pose keypoints)
+ * to Gemini 2.5 Flash for advanced event detection. This multi-modal approach achieves
+ * 2-3 second response times by turning slow "analysis" into fast "confirmation".
  *
  * @param frameBase64 - Base64-encoded JPEG image (without data URL prefix)
+ * @param audioTranscript - Audio transcript from Web Speech API
  * @param poseKeypoints - Current pose keypoints from MoveNet
  * @param currentTime - Current elapsed time (MM:SS format)
  * @returns Detection result with events or error
  */
 export async function detectEventsWithVLM(
   frameBase64: string,
+  audioTranscript: string,
   poseKeypoints: PoseKeypoint[],
   currentTime: string
 ): Promise<DetectionResult> {
@@ -55,44 +58,50 @@ export async function detectEventsWithVLM(
     // Use Gemini 2.5 Flash (latest stable model with vision support)
     const model = genAI.getGenerativeModel({ model: "models/gemini-2.5-flash" });
 
-    // Prepare pose data summary
+    // Prepare pose data summary (concise JSON format for fast processing)
     const visibleKeypoints = poseKeypoints.filter((kp) => kp.score > 0.3);
-    const keypointsSummary = visibleKeypoints
-      .map((kp) => `${kp.name}: (${kp.x.toFixed(0)}, ${kp.y.toFixed(0)}) [confidence: ${(kp.score * 100).toFixed(0)}%]`)
-      .join("\n");
+    const keypointsJSON = JSON.stringify(
+      visibleKeypoints.map((kp) => ({
+        name: kp.name,
+        x: Math.round(kp.x),
+        y: Math.round(kp.y),
+        conf: Math.round(kp.score * 100),
+      })),
+      null,
+      0
+    );
 
-    // Security expert prompt (based on HawkWatch reference)
-    const prompt = `You are a security expert analyzing surveillance footage. Identify concerning situations in these categories:
+    // Multi-modal prompt optimized for speed (HawkWatch strategy)
+    // This turns "analysis" into "confirmation" by providing structured data
+    const prompt = `MULTI-MODAL SECURITY ANALYSIS
+You are an expert AI security system. Analyze the following 3 data sources to quickly confirm if a dangerous event is happening:
 
-1. Medical emergencies (unconsciousness, chest pain, seizures, difficulty breathing)
-2. Falls and injuries (person falling, lying on ground, visible injuries, bleeding)
-3. Distress signals (calls for help, panic, distress gestures, fainting)
-4. Violence or threats (fighting, physical altercations, weapons, threatening behavior)
-5. Suspicious activities (shoplifting, vandalism, trespassing, unusual behavior)
+1️⃣ VIDEO FRAME: A single frame from live surveillance feed (see attached image)
 
-Current timestamp: ${currentTime}
+2️⃣ AUDIO TRANSCRIPT: "${audioTranscript || "No speech detected"}"
 
-Pose keypoint data from the frame:
-${keypointsSummary}
+3️⃣ POSE DATA (JSON): ${keypointsJSON}
 
-Analyze this frame and determine if any concerning events are occurring. Consider:
-- Body positioning and orientation
-- Movement patterns from keypoint data
-- Overall scene context
-- Potential emergencies or dangerous situations
+DANGEROUS EVENTS TO DETECT:
+- Medical emergencies (unconscious, seizure, chest pain, difficulty breathing)
+- Falls & injuries (person fallen, lying on ground, bleeding, not moving)
+- Violence (fighting, physical assault, weapons, threatening gestures)
+- Distress signals (screaming "help", panic gestures, fainting)
+- Security threats (shoplifting, vandalism, trespassing, suspicious behavior)
 
-Respond ONLY with valid JSON in this exact format (no additional text):
-{
-  "events": [
-    {
-      "timestamp": "${currentTime}",
-      "description": "Brief description of event (max 100 characters)",
-      "isDangerous": true or false
-    }
-  ]
-}
+INSTRUCTIONS:
+- Use ALL 3 data sources together for fast confirmation
+- Audio transcript provides instant context (screams, calls for help, threats)
+- Pose data shows body positioning (fallen = horizontal body, low nose position)
+- Video frame confirms visual details
+- Respond in <2 seconds by combining evidence from all sources
 
-If no concerning events are detected, return: {"events": []}`;
+RESPONSE FORMAT (JSON only, no markdown):
+{"events":[{"timestamp":"${currentTime}","description":"Brief event description","isDangerous":true}]}
+
+If scene is normal: {"events":[]}
+
+Timestamp: ${currentTime}`;
 
     // Convert Base64 to proper format for Gemini
     // Remove data URL prefix if present

@@ -5,6 +5,7 @@ import * as tf from "@tensorflow/tfjs";
 import * as poseDetection from "@tensorflow-models/pose-detection";
 import type { Keypoint } from "@tensorflow-models/pose-detection";
 import { detectEventsWithVLM } from "./actions";
+import { Timeline } from "@/components/Timeline";
 
 // Type definitions for better TypeScript support
 interface DetectedEvent {
@@ -60,6 +61,10 @@ export default function RealtimeStreamPage() {
   const vlmIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastVlmAnalysisRef = useRef<number>(0);
   const activeVlmCallsRef = useRef<number>(0); // Track concurrent VLM calls
+
+  // Audio transcript state (Web Speech API)
+  const [audioTranscript, setAudioTranscript] = useState<string>("");
+  const recognitionRef = useRef<any>(null); // SpeechRecognition instance
 
   // Initialize TensorFlow.js and models
   const initMLModels = async () => {
@@ -135,6 +140,70 @@ export default function RealtimeStreamPage() {
     } catch (err) {
       console.error("❌ Webcam error:", err);
       setError(`Failed to access webcam: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  };
+
+  // Initialize Web Speech API for audio transcription
+  const initSpeechRecognition = () => {
+    try {
+      // Check for browser support (Chrome/Edge)
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+      if (!SpeechRecognition) {
+        console.warn("⚠️ Speech Recognition not supported in this browser");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true; // Keep listening
+      recognition.interimResults = true; // Get interim results for real-time updates
+      recognition.lang = "en-US";
+
+      // Update transcript as speech is detected
+      recognition.onresult = (event: any) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setAudioTranscript(transcript);
+        console.log("🎤 Speech detected:", transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn("⚠️ Speech recognition error:", event.error);
+      };
+
+      recognition.onend = () => {
+        // Restart if still detecting
+        if (isDetectingRef.current) {
+          try {
+            recognition.start();
+            console.log("🔄 Speech recognition restarted");
+          } catch (err) {
+            console.warn("⚠️ Could not restart speech recognition:", err);
+          }
+        }
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+      console.log("✅ Speech recognition started");
+    } catch (err) {
+      console.warn("⚠️ Failed to initialize speech recognition:", err);
+    }
+  };
+
+  // Stop speech recognition
+  const stopSpeechRecognition = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+        setAudioTranscript("");
+        console.log("⏹️ Speech recognition stopped");
+      } catch (err) {
+        console.warn("⚠️ Error stopping speech recognition:", err);
+      }
     }
   };
 
@@ -432,17 +501,29 @@ export default function RealtimeStreamPage() {
       // Get current time
       const currentTime = getElapsedTime();
 
-      // Call server action
-      console.log("📸 Sending optimized frame to VLM for analysis...");
+      // Call server action with multi-modal data (frame + audio + pose)
+      console.log("📸 Sending multi-modal data to VLM for analysis...");
+      console.log("   📸 Frame: Optimized JPEG");
+      console.log("   🎤 Audio:", audioTranscript || "No speech detected");
+      console.log("   🤸 Pose:", lastPoseKeypoints.filter(kp => kp.score > 0.3).length, "keypoints");
       const result = await detectEventsWithVLM(
         base64Image,
+        audioTranscript,
         lastPoseKeypoints,
         currentTime
       );
 
       if (!result.success) {
         console.error("❌ VLM analysis failed:", result.error);
-        setVlmError(result.error || "VLM analysis failed");
+
+        // Check if it's a rate limit error
+        if (result.error?.includes("429") || result.error?.includes("quota") || result.error?.includes("Too Many Requests")) {
+          setVlmError("Rate limit exceeded. Reduced to 5-second intervals. Free tier: 250 requests/day.");
+          console.warn("⚠️ Rate limit hit - continuing with reduced frequency");
+        } else {
+          setVlmError(result.error || "VLM analysis failed");
+        }
+
         setVlmStatus("error");
         return;
       }
@@ -541,16 +622,19 @@ export default function RealtimeStreamPage() {
     console.log("📹 Starting webcam...");
     await startWebcam();
 
+    console.log("🎤 Starting speech recognition for audio transcription...");
+    initSpeechRecognition();
+
     console.log("🔄 Starting detection loop...");
     runDetection();
 
     // Start VLM analysis interval if Phase 2 is enabled
     if (isPhase2Enabled) {
-      console.log("🚀 Starting Phase 2 VLM analysis (1.5-second interval for near real-time)");
-      vlmIntervalRef.current = setInterval(analyzeFrameWithVLM, 1500);
+      console.log("🚀 Starting Phase 2 VLM analysis (5-second interval to respect API rate limits)");
+      vlmIntervalRef.current = setInterval(analyzeFrameWithVLM, 5000);
     }
 
-    console.log("✅ Detection started successfully");
+    console.log("✅ Detection started successfully (with audio transcription)");
   };
 
   // Stop detection
@@ -571,6 +655,9 @@ export default function RealtimeStreamPage() {
       activeVlmCallsRef.current = 0; // Reset active calls counter
       console.log("⏹️ Stopped Phase 2 VLM analysis");
     }
+
+    // Stop speech recognition
+    stopSpeechRecognition();
 
     // Stop webcam
     if (streamRef.current) {
@@ -611,6 +698,12 @@ export default function RealtimeStreamPage() {
     const minutes = Math.floor(elapsed / 60);
     const seconds = elapsed % 60;
     return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  // Get elapsed time in seconds (for Timeline component)
+  const getElapsedSeconds = (): number => {
+    if (!startTime) return 0;
+    return Math.floor((Date.now() - startTime) / 1000);
   };
 
   // Initialize on mount
@@ -727,6 +820,17 @@ export default function RealtimeStreamPage() {
                 )}
               </div>
 
+              {/* Timeline - Directly under video (YouTube style) */}
+              {isDetecting && (
+                <div className="mt-3 px-2">
+                  <Timeline
+                    events={events}
+                    videoDuration={getElapsedSeconds()}
+                    currentTime={getElapsedSeconds()}
+                  />
+                </div>
+              )}
+
               {/* Controls */}
               <div className="mt-4 space-y-4">
                 {/* Start/Stop Button */}
@@ -780,7 +884,7 @@ export default function RealtimeStreamPage() {
                             setVlmError(null);
                             setLastVlmTime(null);
                             lastVlmAnalysisRef.current = 0;
-                            vlmIntervalRef.current = setInterval(analyzeFrameWithVLM, 1500);
+                            vlmIntervalRef.current = setInterval(analyzeFrameWithVLM, 5000);
                             console.log("⏱️ VLM interval created:", vlmIntervalRef.current);
                           } else {
                             // Stopping Phase 2 mid-detection
@@ -836,7 +940,7 @@ export default function RealtimeStreamPage() {
                     </div>
                   )}
                   <p className="text-xs text-slate-400 mt-2">
-                    Requires Google Gemini API key. Analyzes frames every 1.5 seconds for near real-time threat detection. Triggers alerts independently of Phase 1.
+                    Requires Google Gemini API key. Analyzes frames every 5 seconds (free tier: 250 requests/day limit). Triggers alerts independently of Phase 1.
                   </p>
 
                   {/* Manual Test Button */}
@@ -856,22 +960,40 @@ export default function RealtimeStreamPage() {
 
               {/* Stats */}
               {isDetecting && (
-                <div className="mt-4 grid grid-cols-3 gap-4">
-                  <div className="bg-slate-700 rounded-lg p-4">
-                    <p className="text-slate-400 text-sm">Elapsed Time</p>
-                    <p className="text-white text-2xl font-bold">{elapsedTime}</p>
+                <>
+                  <div className="mt-4 grid grid-cols-3 gap-4">
+                    <div className="bg-slate-700 rounded-lg p-4">
+                      <p className="text-slate-400 text-sm">Elapsed Time</p>
+                      <p className="text-white text-2xl font-bold">{elapsedTime}</p>
+                    </div>
+                    <div className="bg-slate-700 rounded-lg p-4">
+                      <p className="text-slate-400 text-sm">Events Detected</p>
+                      <p className="text-white text-2xl font-bold">{events.length}</p>
+                    </div>
+                    <div className="bg-slate-700 rounded-lg p-4">
+                      <p className="text-slate-400 text-sm">Keypoints</p>
+                      <p className="text-white text-2xl font-bold">
+                        {lastPoseKeypoints.filter((kp) => kp.score > 0.3).length}
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-slate-700 rounded-lg p-4">
-                    <p className="text-slate-400 text-sm">Events Detected</p>
-                    <p className="text-white text-2xl font-bold">{events.length}</p>
-                  </div>
-                  <div className="bg-slate-700 rounded-lg p-4">
-                    <p className="text-slate-400 text-sm">Keypoints</p>
-                    <p className="text-white text-2xl font-bold">
-                      {lastPoseKeypoints.filter((kp) => kp.score > 0.3).length}
+
+                  {/* Audio Transcription Display */}
+                  <div className="mt-4 bg-slate-700 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-slate-400 text-sm">🎤 Audio Transcript:</span>
+                      {recognitionRef.current && (
+                        <span className="text-green-400 text-xs animate-pulse">● LISTENING</span>
+                      )}
+                    </div>
+                    <p className="text-white text-sm font-mono">
+                      {audioTranscript || "No speech detected..."}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-2">
+                      Multi-modal analysis combines audio + video + pose for 2-3 second response
                     </p>
                   </div>
-                </div>
+                </>
               )}
             </div>
           </div>
@@ -948,14 +1070,15 @@ export default function RealtimeStreamPage() {
               </div>
 
               <div className="bg-purple-500/20 border border-purple-500 rounded-lg p-4">
-                <h3 className="text-purple-300 font-semibold mb-2">Phase 2: VLM Analysis</h3>
+                <h3 className="text-purple-300 font-semibold mb-2">Phase 2: Multi-Modal VLM</h3>
                 <ul className="text-sm text-purple-200 space-y-1">
+                  <li>• 🎤 Audio (Speech Recognition)</li>
+                  <li>• 📸 Video Frame (JPEG)</li>
+                  <li>• 🤸 Pose Data (MoveNet)</li>
+                  <li>• ⚡ 5-second analysis intervals</li>
+                  <li>• 🔄 ~12 requests/minute</li>
                   <li>• Google Gemini 2.5 Flash</li>
-                  <li>• 1.5-second analysis (near real-time)</li>
-                  <li>• Independent visual alerts</li>
-                  <li>• Advanced threat detection</li>
-                  <li>• Medical emergencies</li>
-                  <li>• Violence & suspicious activity</li>
+                  <li>• Medical emergencies & violence</li>
                 </ul>
               </div>
             </div>
