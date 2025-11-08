@@ -66,6 +66,13 @@ export default function RealtimeStreamPage() {
   const [audioTranscript, setAudioTranscript] = useState<string>("");
   const recognitionRef = useRef<any>(null); // SpeechRecognition instance
 
+  // Video recording state
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+
   // Initialize TensorFlow.js and models
   const initMLModels = async () => {
     try {
@@ -204,6 +211,49 @@ export default function RealtimeStreamPage() {
       } catch (err) {
         console.warn("⚠️ Error stopping speech recognition:", err);
       }
+    }
+  };
+
+  // Start video recording
+  const startRecording = () => {
+    if (!streamRef.current) {
+      console.warn("⚠️ No stream available to record");
+      return;
+    }
+
+    try {
+      recordedChunksRef.current = [];
+      const mediaRecorder = new MediaRecorder(streamRef.current, {
+        mimeType: "video/webm;codecs=vp9",
+      });
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
+        setRecordedBlob(blob);
+        setIsRecording(false);
+        console.log("✅ Recording stopped, blob size:", blob.size);
+      };
+
+      mediaRecorder.start(100); // Capture data every 100ms
+      mediaRecorderRef.current = mediaRecorder;
+      setIsRecording(true);
+      console.log("🎥 Video recording started");
+    } catch (err) {
+      console.error("❌ Failed to start recording:", err);
+    }
+  };
+
+  // Stop video recording
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      console.log("⏹️ Stopping video recording...");
     }
   };
 
@@ -412,6 +462,39 @@ export default function RealtimeStreamPage() {
     setTimeout(() => setFallStatus(null), 2000);
 
     console.log("🚨 FALL DETECTED at", currentTime, "| Confidence:", (clampedConfidence * 100).toFixed(1) + "%", "| Velocity:", velocity.toFixed(1) + "px");
+
+    // --- INSTANT EMAIL NOTIFICATION FOR DANGEROUS EVENTS ---
+    // If the event is dangerous, send the email notification
+    if (newEvent.isDangerous) {
+      console.log("DANGEROUS EVENT: Sending notification...");
+      try {
+        fetch("/api/send-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventDescription: newEvent.description,
+            timestamp: newEvent.timestamp,
+            frameImage: "", // Optional - Phase 1 doesn't capture frame
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              console.log("✅ Notification sent successfully.");
+            } else {
+              console.warn("⚠️ Notification failed:", data.error);
+            }
+          })
+          .catch((error) => {
+            console.error("❌ Failed to send notification:", error);
+          });
+      } catch (error) {
+        console.error("❌ Failed to send notification:", error);
+      }
+    }
+    // --- END OF EMAIL NOTIFICATION CODE ---
   };
 
 
@@ -625,6 +708,9 @@ export default function RealtimeStreamPage() {
     console.log("🎤 Starting speech recognition for audio transcription...");
     initSpeechRecognition();
 
+    console.log("🎥 Starting video recording...");
+    startRecording();
+
     console.log("🔄 Starting detection loop...");
     runDetection();
 
@@ -659,6 +745,9 @@ export default function RealtimeStreamPage() {
     // Stop speech recognition
     stopSpeechRecognition();
 
+    // Stop video recording
+    stopRecording();
+
     // Stop webcam
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -675,19 +764,11 @@ export default function RealtimeStreamPage() {
     setVlmError(null);
     setLastVlmTime(null);
 
-    // Save events to localStorage
-    if (events.length > 0) {
-      const savedData = {
-        timestamp: new Date().toISOString(),
-        events,
-        duration: getElapsedTime(),
-      };
-
-      const existing = JSON.parse(localStorage.getItem("vigilante-sessions") || "[]");
-      existing.push(savedData);
-      localStorage.setItem("vigilante-sessions", JSON.stringify(existing));
-
-      console.log("💾 Session saved to localStorage");
+    // Show save modal after recording stops (wait for blob to be ready)
+    // The modal will appear when recordedBlob state is updated by stopRecording
+    if (events.length > 0 || isRecording) {
+      // Modal will show via useEffect when recordedBlob is set
+      console.log("⏳ Waiting for recording to finish, then showing save modal");
     }
   };
 
@@ -741,6 +822,49 @@ export default function RealtimeStreamPage() {
 
     return () => clearInterval(interval);
   }, [isDetecting, startTime]);
+
+  // Show save modal when recording blob is ready
+  useEffect(() => {
+    if (recordedBlob && events.length > 0) {
+      setShowSaveModal(true);
+    }
+  }, [recordedBlob, events.length]);
+
+  // Save recording to IndexedDB
+  const handleSaveRecording = async (name: string) => {
+    if (!recordedBlob) {
+      console.error("❌ No recorded blob available");
+      return;
+    }
+
+    try {
+      const { saveVideoToDB } = await import("@/lib/videoStorage");
+
+      const videoData = {
+        id: Date.now().toString(),
+        name,
+        blob: recordedBlob,
+        thumbnailUrl: "", // TODO: Generate thumbnail
+        timestamps: events.map(e => ({
+          timestamp: e.timestamp,
+          description: e.description,
+          isDangerous: e.isDangerous,
+        })),
+        createdAt: new Date().toISOString(),
+      };
+
+      await saveVideoToDB(videoData);
+      console.log("✅ Video saved successfully");
+
+      // Close modal and reset state
+      setShowSaveModal(false);
+      setRecordedBlob(null);
+      setEvents([]);
+    } catch (err) {
+      console.error("❌ Failed to save video:", err);
+      alert("Failed to save video. Please try again.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
@@ -1085,6 +1209,56 @@ export default function RealtimeStreamPage() {
           </div>
         </div>
       </div>
+
+      {/* Save Recording Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
+            <h2 className="text-2xl font-bold text-white mb-4">Save Recording</h2>
+            <p className="text-gray-300 mb-4">
+              Recording complete! Give your video a name to save it.
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const name = formData.get("videoName") as string;
+                if (name.trim()) {
+                  handleSaveRecording(name.trim());
+                }
+              }}
+            >
+              <input
+                type="text"
+                name="videoName"
+                placeholder="Enter video name..."
+                className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500 mb-4"
+                autoFocus
+                required
+              />
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSaveModal(false);
+                    setRecordedBlob(null);
+                    setEvents([]);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors"
+                >
+                  Discard
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  Save Video
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
