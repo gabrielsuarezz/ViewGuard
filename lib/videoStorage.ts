@@ -12,6 +12,7 @@ interface SavedVideo {
     description: string;
     isDangerous: boolean;
   }[];
+  transcript: string; // Audio transcript from speech recognition
   createdAt: string;
 }
 

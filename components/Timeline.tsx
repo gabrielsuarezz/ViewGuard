@@ -11,6 +11,7 @@ interface TimelineProps {
   events: TimestampEvent[];
   videoDuration: number; // Total duration in seconds
   currentTime: number;   // Current playback time in seconds
+  onSeek?: (timeInSeconds: number) => void; // Callback to seek video
 }
 
 // Helper to convert "MM:SS" timestamp to a percentage
@@ -21,14 +22,44 @@ const timeToPercentage = (timestamp: string, duration: number) => {
   return (timeInSeconds / duration) * 100;
 };
 
-export function Timeline({ events, videoDuration, currentTime }: TimelineProps) {
+// Helper to convert "MM:SS" timestamp to seconds
+const timeToSeconds = (timestamp: string) => {
+  const [minutes, seconds] = timestamp.split(':').map(Number);
+  return minutes * 60 + seconds;
+};
+
+export function Timeline({ events, videoDuration, currentTime, onSeek }: TimelineProps) {
   const duration = videoDuration || 1; // Prevent division by zero
   const currentPercentage = Math.min((currentTime / duration) * 100, 100);
+
+  // Handle clicking on event markers
+  const handleMarkerClick = (timestamp: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent timeline click from firing
+    if (onSeek) {
+      const timeInSeconds = timeToSeconds(timestamp);
+      onSeek(timeInSeconds);
+    }
+  };
+
+  // Handle clicking anywhere on timeline
+  const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!onSeek) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = (clickX / rect.width) * 100;
+    const timeInSeconds = (percentage / 100) * duration;
+
+    onSeek(timeInSeconds);
+  };
 
   return (
     <div className="w-full">
       {/* Timeline Container - YouTube style */}
-      <div className="w-full h-3 bg-gray-700/50 rounded-full relative overflow-hidden cursor-pointer hover:h-4 transition-all group">
+      <div
+        className="w-full h-3 bg-gray-700/50 rounded-full relative overflow-hidden cursor-pointer hover:h-4 transition-all group"
+        onClick={handleTimelineClick}
+      >
 
         {/* Blue Progress Bar (fills from left to right) */}
         <div
@@ -43,13 +74,14 @@ export function Timeline({ events, videoDuration, currentTime }: TimelineProps) 
           return (
             <div
               key={`danger-${index}`}
-              className="absolute top-0 h-full bg-red-500 transition-all"
+              className="absolute top-0 h-full bg-red-500 transition-all hover:bg-red-400 cursor-pointer hover:scale-110 hover:z-10"
               style={{
                 left: `${Math.max(0, percentage - 1)}%`,
                 width: '2%',
                 minWidth: '4px'
               }}
               title={`⚠️ ${event.timestamp}: ${event.description}`}
+              onClick={(e) => handleMarkerClick(event.timestamp, e)}
             />
           );
         })}
@@ -61,13 +93,14 @@ export function Timeline({ events, videoDuration, currentTime }: TimelineProps) 
           return (
             <div
               key={`safe-${index}`}
-              className="absolute top-0 h-full bg-green-400/70 transition-all"
+              className="absolute top-0 h-full bg-green-400/70 transition-all hover:bg-green-300 cursor-pointer hover:scale-110 hover:z-10"
               style={{
                 left: `${percentage}%`,
                 width: '1%',
                 minWidth: '2px'
               }}
               title={`✓ ${event.timestamp}: ${event.description}`}
+              onClick={(e) => handleMarkerClick(event.timestamp, e)}
             />
           );
         })}

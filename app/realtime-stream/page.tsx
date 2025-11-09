@@ -35,6 +35,7 @@ export default function RealtimeStreamPage() {
   const lastDetectionTimeRef = useRef<number>(0);
   const isDetectingRef = useRef<boolean>(false);
   const isPhase2EnabledRef = useRef<boolean>(false);
+  const recordingStartTimeRef = useRef<number>(0); // Track when video recording actually starts
 
   // Refs for enhanced multi-detection algorithm
   const centerOfMassHistoryRef = useRef<{ x: number; y: number }[]>([]); // Track center of mass for enhanced fall detection
@@ -73,6 +74,7 @@ export default function RealtimeStreamPage() {
   // Audio transcript state (Web Speech API)
   const [audioTranscript, setAudioTranscript] = useState<string>("");
   const recognitionRef = useRef<any>(null); // SpeechRecognition instance
+  const finalTranscriptRef = useRef<string>(""); // Store only final transcripts for saving
 
   // Video recording state
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -137,13 +139,14 @@ export default function RealtimeStreamPage() {
           height: { ideal: 720 },
           facingMode: "user",
         },
-        audio: false,
+        audio: true, // Enable audio recording for saved videos
       });
 
       streamRef.current = stream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.muted = true; // Mute video element to prevent audio feedback/echo
         await new Promise((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = resolve;
@@ -176,12 +179,32 @@ export default function RealtimeStreamPage() {
 
       // Update transcript as speech is detected
       recognition.onresult = (event: any) => {
-        let transcript = "";
+        let interimTranscript = "";
+        let finalTranscript = "";
+
+        // Collect all results (both interim and final)
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + " ";
+          } else {
+            interimTranscript += transcript;
+          }
         }
-        setAudioTranscript(transcript);
-        console.log("🎤 Speech detected:", transcript);
+
+        // Accumulate final transcripts in ref (for saving)
+        if (finalTranscript) {
+          finalTranscriptRef.current += finalTranscript;
+          console.log("🎤 Final speech saved:", finalTranscript);
+        }
+
+        // Display both final and interim transcripts in UI
+        const displayTranscript = finalTranscriptRef.current + interimTranscript;
+        setAudioTranscript(displayTranscript);
+
+        if (interimTranscript) {
+          console.log("🎤 Interim speech (showing but not saved):", interimTranscript);
+        }
       };
 
       recognition.onerror = (event: any) => {
@@ -241,6 +264,12 @@ export default function RealtimeStreamPage() {
         }
       };
 
+      mediaRecorder.onstart = () => {
+        // Capture exact moment recording starts for accurate timestamps
+        recordingStartTimeRef.current = Date.now();
+        console.log("🎥 Video recording started at:", recordingStartTimeRef.current);
+      };
+
       mediaRecorder.onstop = () => {
         const blob = new Blob(recordedChunksRef.current, { type: "video/webm" });
         setRecordedBlob(blob);
@@ -251,7 +280,6 @@ export default function RealtimeStreamPage() {
       mediaRecorder.start(100); // Capture data every 100ms
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
-      console.log("🎥 Video recording started");
     } catch (err) {
       console.error("❌ Failed to start recording:", err);
     }
@@ -986,6 +1014,8 @@ export default function RealtimeStreamPage() {
     setStartTime(Date.now());
     setEvents([]);
     setFallStatus(null);
+    setAudioTranscript(""); // Reset transcript display
+    finalTranscriptRef.current = ""; // Reset final transcript storage
     centerOfMassHistoryRef.current = [];
     lastFallTimeRef.current = 0; // Reset fall detection debounce
     personOnGroundStartTimeRef.current = 0; // Reset person on ground timer
@@ -1063,6 +1093,9 @@ export default function RealtimeStreamPage() {
     setVlmError(null);
     setLastVlmTime(null);
 
+    // Reset recording start time
+    recordingStartTimeRef.current = 0;
+
     // Show save modal after recording stops (wait for blob to be ready)
     // The modal will appear when recordedBlob state is updated by stopRecording
     if (events.length > 0 || isRecording) {
@@ -1072,9 +1105,10 @@ export default function RealtimeStreamPage() {
   };
 
   // Get elapsed time
+  // Get elapsed time relative to video recording start (for accurate timeline sync)
   const getElapsedTime = (): string => {
-    if (!startTime) return "00:00";
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    if (!recordingStartTimeRef.current) return "00:00";
+    const elapsed = Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
     const minutes = Math.floor(elapsed / 60);
     const seconds = elapsed % 60;
     return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
@@ -1082,8 +1116,8 @@ export default function RealtimeStreamPage() {
 
   // Get elapsed time in seconds (for Timeline component)
   const getElapsedSeconds = (): number => {
-    if (!startTime) return 0;
-    return Math.floor((Date.now() - startTime) / 1000);
+    if (!recordingStartTimeRef.current) return 0;
+    return Math.floor((Date.now() - recordingStartTimeRef.current) / 1000);
   };
 
   // Initialize on mount
@@ -1149,6 +1183,7 @@ export default function RealtimeStreamPage() {
           description: e.description,
           isDangerous: e.isDangerous,
         })),
+        transcript: finalTranscriptRef.current || "No speech detected", // Use final transcript from ref
         createdAt: new Date().toISOString(),
       };
 
