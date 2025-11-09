@@ -7,11 +7,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useNotifications } from "@/contexts/NotificationsContext";
 import { useReports } from "@/contexts/ReportsContext";
+import { AIChat } from "@/components/AIChat";
+import { VoiceChat } from "@/components/VoiceChat";
+import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 
 const Analytics = () => {
   const { getHighRiskCount, getTotalDetections, notifications } = useNotifications();
   const { reports } = useReports();
-  
+  const analyticsData = useAnalyticsData();
+
   // Combine notifications and reports for complete analytics
   const allIncidents = [
     ...notifications.map(n => ({ ...n, isReport: false })),
@@ -41,7 +45,6 @@ const Analytics = () => {
       theft: 0,
       fight: 0,
       robbery: 0,
-      fall: 0,
       vandalism: 0
     }));
 
@@ -287,7 +290,7 @@ const Analytics = () => {
                 <Line type="monotone" dataKey="theft" stroke="hsl(var(--alert-high))" strokeWidth={2} name="Theft" />
                 <Line type="monotone" dataKey="fight" stroke="hsl(var(--alert-medium))" strokeWidth={2} name="Fight" />
                 <Line type="monotone" dataKey="robbery" stroke="hsl(var(--alert-low))" strokeWidth={2} name="Robbery" />
-                <Line type="monotone" dataKey="fall" stroke="hsl(var(--primary))" strokeWidth={2} name="Fall" />
+                <Line type="monotone" dataKey="vandalism" stroke="hsl(var(--accent))" strokeWidth={2} name="Vandalism" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -422,6 +425,17 @@ const Analytics = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* AI Assistants */}
+      <div className="mt-6 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[600px]">
+          {/* Voice Assistant */}
+          <VoiceChat analyticsData={analyticsData} />
+
+          {/* Text AI Assistant */}
+          <AIChat analyticsData={analyticsData} />
+        </div>
       </div>
     </div>;
 };
