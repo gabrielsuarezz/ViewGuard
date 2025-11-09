@@ -9,6 +9,7 @@ import {
 import { Detection } from "./CCTVTile";
 import { usePersonDetection } from "@/hooks/usePersonDetection";
 import { getCurrentVideo, getNextVideo } from "@/config/videoScheduler";
+import { BoundingBoxesOverlay } from "@/components/BoundingBoxesOverlay";
 
 interface CameraModalProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ const CameraModal = ({ isOpen, onClose, cameraId, detection, videoSources }: Cam
     }
   }, [cameraId, isOpen]);
 
-  // Use person detection with TensorFlow.js - DISABLED for performance
+  // TensorFlow.js disabled - using pre-processed JSON bounding boxes instead
   const { detections: personDetections } = usePersonDetection(videoRef, false, 200, 0.2);
 
   const getCurrentTime = () => {
@@ -76,42 +77,12 @@ const CameraModal = ({ isOpen, onClose, cameraId, detection, videoSources }: Cam
               CAM {cameraId}
             </div>
 
-            {/* Person Detection Overlays (Green Boxes) */}
-            {personDetections.map((person, index) => {
-              const videoElement = videoRef.current;
-              if (!videoElement) return null;
-
-              const videoWidth = videoElement.offsetWidth;
-              const videoHeight = videoElement.offsetHeight;
-
-              // Convert pixel coordinates to percentages
-              const [x, y, width, height] = person.bbox;
-              const leftPercent = (x / videoWidth) * 100;
-              const topPercent = (y / videoHeight) * 100;
-              const widthPercent = (width / videoWidth) * 100;
-              const heightPercent = (height / videoHeight) * 100;
-
-              return (
-                <div
-                  key={`person-${index}`}
-                  className="absolute z-20"
-                  style={{
-                    left: `${leftPercent}%`,
-                    top: `${topPercent}%`,
-                    width: `${widthPercent}%`,
-                    height: `${heightPercent}%`,
-                  }}
-                >
-                  {/* Green Bounding Box for Person */}
-                  <div className="w-full h-full border-2 border-green-500">
-                    {/* Label */}
-                    <div className="absolute -top-6 left-0 px-2 py-1 text-xs font-bold bg-green-500 text-white">
-                      PERSON
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {/* Person Detection Overlays (Green Boxes) - Pre-processed from Python/YOLOv8 */}
+            <BoundingBoxesOverlay
+              videoRef={videoRef}
+              videoSrc={currentVideo}
+              enabled={true}
+            />
 
             {/* Event Detection Overlay (Red/Orange/Yellow Boxes) */}
             {detection && (
