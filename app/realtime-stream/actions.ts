@@ -82,18 +82,25 @@ You are an expert AI security system. Analyze the following 3 data sources to qu
 
 3️⃣ POSE DATA (JSON): ${keypointsJSON}
 
-DANGEROUS EVENTS TO DETECT:
-- Medical emergencies (unconscious, seizure, chest pain, difficulty breathing)
-- Falls & injuries (person fallen, lying on ground, bleeding, not moving)
-- Violence (fighting, physical assault, weapons, threatening gestures)
-- Distress signals (screaming "help", panic gestures, fainting)
-- Security threats (shoplifting, vandalism, trespassing, suspicious behavior)
+DANGEROUS EVENTS TO DETECT (in priority order):
+1. UNCONSCIOUS PERSON - Head tilted back, eyes closed, no movement, collapsed posture
+   • Look for: head tilted backward at extreme angle, limp body, unresponsive appearance
+   • Pose clues: nose keypoint very high, low shoulder/hip positions, horizontal body
+2. Medical emergencies - Seizure, chest pain, difficulty breathing, choking
+3. Falls & injuries - Person fallen, lying on ground, bleeding, not moving
+4. Violence - Fighting, physical assault, weapons, threatening gestures
+5. Distress signals - Screaming "help", panic gestures, fainting, hands raised in surrender
+6. Security threats - Shoplifting, vandalism, trespassing, suspicious behavior
 
 INSTRUCTIONS:
 - Use ALL 3 data sources together for fast confirmation
 - Audio transcript provides instant context (screams, calls for help, threats)
-- Pose data shows body positioning (fallen = horizontal body, low nose position)
-- Video frame confirms visual details
+- Pose data shows body positioning:
+  • Unconscious: nose keypoint very high Y (head back), horizontal body orientation
+  • Fallen: low nose Y position, horizontal shoulder/hip alignment
+  • Distress: wrists above shoulders (hands raised), vertical body
+- Video frame confirms visual details (facial expression, body posture, environmental context)
+- PRIORITY: Unconscious person detection is CRITICAL - if you see head tilted back with limp posture, always flag it
 - Respond in <2 seconds by combining evidence from all sources
 
 RESPONSE FORMAT (JSON only, no markdown):

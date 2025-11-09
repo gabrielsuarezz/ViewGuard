@@ -45,11 +45,14 @@ export default function RealtimeStreamPage() {
   const lastHandsRaisedAlertRef = useRef<number>(0); // Debounce for hands raised alerts
   const lastPersonOnGroundAlertRef = useRef<number>(0); // Debounce for person on ground alerts
   const previousKeypointsRef = useRef<PoseKeypoint[]>([]); // Track previous frame for movement detection
+  const headTiltBackStartTimeRef = useRef<number>(0); // Track when head first tilted back
+  const lastHeadTiltBackAlertRef = useRef<number>(0); // Debounce for head tilt back alerts
 
   const HISTORY_LENGTH = 5;
   const FALL_VELOCITY_THRESHOLD = 0.15; // 15% of person height per frame (adaptive)
   const PERSON_ON_GROUND_DURATION = 5000; // 5 seconds horizontal = medical emergency
   const HANDS_RAISED_DURATION = 2000; // 2 seconds hands raised = distress/robbery
+  const HEAD_TILT_BACK_DURATION = 3000; // 3 seconds head tilted back = unconscious
 
   // State management
   const [isInitializing, setIsInitializing] = useState(true);
@@ -467,6 +470,7 @@ export default function RealtimeStreamPage() {
         detectEnhancedFall(keypoints, canvas.height);
         detectPersonOnGround(keypoints, canvas.height);
         detectHandsRaised(keypoints);
+        detectHeadTiltBack(keypoints, canvas.height);
         // ========== END MULTI-DETECTION ==========
 
         // Store keypoints for next frame comparison
@@ -642,6 +646,66 @@ export default function RealtimeStreamPage() {
     }
   };
 
+  // 4. Head Tilted Back Detection (unconscious person)
+  const detectHeadTiltBack = (keypoints: Keypoint[], canvasHeight: number) => {
+    const nose = getKeypoint(keypoints, "nose");
+    const leftEye = getKeypoint(keypoints, "left_eye");
+    const rightEye = getKeypoint(keypoints, "right_eye");
+    const leftShoulder = getKeypoint(keypoints, "left_shoulder");
+    const rightShoulder = getKeypoint(keypoints, "right_shoulder");
+
+    if (!nose || !leftShoulder || !rightShoulder) {
+      // Reset timer if we can't detect necessary keypoints
+      headTiltBackStartTimeRef.current = 0;
+      return;
+    }
+
+    // Calculate shoulder center
+    const shoulderCenterY = (leftShoulder.y + rightShoulder.y) / 2;
+
+    // Calculate person height for adaptive threshold
+    const personHeight = calculatePersonHeight(keypoints);
+    if (personHeight === 0) {
+      headTiltBackStartTimeRef.current = 0;
+      return;
+    }
+
+    // Check if head is tilted back: nose should be ABOVE shoulders (lower Y value)
+    // AND the difference should be significant (at least 20% of person height)
+    const headTiltThreshold = personHeight * 0.20; // 20% of person height
+    const noseAboveShoulders = shoulderCenterY - nose.y; // Positive if nose is above shoulders
+
+    // Additional check: eyes should be even higher than nose if visible
+    let eyesConfirmTilt = true;
+    if (leftEye && rightEye) {
+      const eyeCenterY = (leftEye.y + rightEye.y) / 2;
+      eyesConfirmTilt = eyeCenterY < nose.y; // Eyes above nose = head tilted back
+    }
+
+    // Detect head tilted back if nose is significantly above shoulders AND eyes confirm (if visible)
+    if (noseAboveShoulders > headTiltThreshold && eyesConfirmTilt) {
+      const now = Date.now();
+
+      // Start timer if this is the first detection
+      if (headTiltBackStartTimeRef.current === 0) {
+        headTiltBackStartTimeRef.current = now;
+      }
+
+      // Check if head has been tilted back for 3+ seconds
+      const duration = now - headTiltBackStartTimeRef.current;
+      if (duration >= HEAD_TILT_BACK_DURATION) {
+        // Debounce: avoid duplicate alerts (10 seconds)
+        if (now - lastHeadTiltBackAlertRef.current >= 10000) {
+          lastHeadTiltBackAlertRef.current = now;
+          triggerHeadTiltBackEvent(duration, noseAboveShoulders, personHeight);
+        }
+      }
+    } else {
+      // Reset timer if head is no longer tilted back
+      headTiltBackStartTimeRef.current = 0;
+    }
+  };
+
   // Trigger fall event with dynamic confidence calculation
   const triggerFallEvent = (velocity: number, keypointConfidence: number, bodyAngle: number, personHeight: number) => {
     // Debounce: Avoid duplicate events within 3 seconds using ref (synchronous)
@@ -788,6 +852,65 @@ export default function RealtimeStreamPage() {
     setTimeout(() => setFallStatus(null), 3000);
 
     console.log("🚨 HANDS RAISED at", currentTime, "| Duration:", Math.round(duration / 1000) + "s", "| Above head:", handsAboveHead);
+
+    // Send email notification
+    if (newEvent.isDangerous) {
+      console.log("DANGEROUS EVENT: Sending notification...");
+      try {
+        fetch("/api/send-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventDescription: newEvent.description,
+            timestamp: newEvent.timestamp,
+            frameImage: "",
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              console.log("✅ Notification sent successfully.");
+            } else {
+              console.warn("⚠️ Notification failed:", data.error);
+            }
+          })
+          .catch((error) => {
+            console.error("❌ Failed to send notification:", error);
+          });
+      } catch (error) {
+        console.error("❌ Failed to send notification:", error);
+      }
+    }
+  };
+
+  // Trigger head tilt back event (unconscious person)
+  const triggerHeadTiltBackEvent = (duration: number, tiltAmount: number, personHeight: number) => {
+    const currentTime = getElapsedTime();
+
+    setFallStatus("⚠️ UNCONSCIOUS - HEAD TILTED BACK");
+
+    // Calculate confidence based on tilt amount and duration
+    const tiltScore = Math.min(tiltAmount / (personHeight * 0.4), 1.0); // Normalize tilt
+    const durationScore = Math.min(duration / 10000, 1.0); // Normalize duration (max at 10s)
+    const confidence = 0.7 + (tiltScore * 0.15) + (durationScore * 0.15); // Base 70% + bonuses
+    const clampedConfidence = Math.max(0.70, Math.min(0.95, confidence));
+
+    const newEvent: DetectedEvent = {
+      timestamp: currentTime,
+      description: `Person unconscious - head tilted back for ${Math.round(duration / 1000)}s - possible medical emergency`,
+      isDangerous: true,
+      confidence: clampedConfidence,
+      source: "heuristic",
+    };
+
+    setEvents((prev) => [...prev, newEvent]);
+
+    // Auto-clear status after 3 seconds
+    setTimeout(() => setFallStatus(null), 3000);
+
+    console.log("🚨 UNCONSCIOUS DETECTED at", currentTime, "| Duration:", Math.round(duration / 1000) + "s", "| Tilt:", Math.round(tiltAmount) + "px", "| Confidence:", (clampedConfidence * 100).toFixed(1) + "%");
 
     // Send email notification
     if (newEvent.isDangerous) {
@@ -1045,8 +1168,8 @@ export default function RealtimeStreamPage() {
 
     // Start VLM analysis interval if Phase 2 is enabled
     if (isPhase2Enabled) {
-      console.log("🚀 Starting Phase 2 VLM analysis (5-second interval to respect API rate limits)");
-      vlmIntervalRef.current = setInterval(analyzeFrameWithVLM, 5000);
+      console.log("🚀 Starting Phase 2 VLM analysis (1.5-second interval for near real-time detection)");
+      vlmIntervalRef.current = setInterval(analyzeFrameWithVLM, 1500);
     }
 
     console.log("✅ Detection started successfully (with audio transcription)");
@@ -1342,7 +1465,7 @@ export default function RealtimeStreamPage() {
                             setVlmError(null);
                             setLastVlmTime(null);
                             lastVlmAnalysisRef.current = 0;
-                            vlmIntervalRef.current = setInterval(analyzeFrameWithVLM, 5000);
+                            vlmIntervalRef.current = setInterval(analyzeFrameWithVLM, 1500);
                             console.log("⏱️ VLM interval created:", vlmIntervalRef.current);
                           } else {
                             // Stopping Phase 2 mid-detection
