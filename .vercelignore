@@ -1,0 +1,10 @@
+# Python files (used for local development only)
+*.py
+requirements.txt
+scripts/
+__pycache__/
+
+# Development files
+.vscode/
+.idea/
+*.log
