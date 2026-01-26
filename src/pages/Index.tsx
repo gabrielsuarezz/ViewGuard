@@ -126,29 +126,30 @@ const Index = () => {
               <p className="text-xs text-muted-foreground uppercase tracking-widest">Neural Surveillance Grid</p>
             </div>
           </Link>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" asChild className="gap-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Show all buttons on md+, only key ones on mobile */}
+            <Button variant="outline" size="sm" asChild className="gap-2 hidden sm:flex">
               <Link to="/upload">
                 <Upload className="w-4 h-4" />
-                Upload
+                <span className="hidden md:inline">Upload</span>
               </Link>
             </Button>
-            <Button variant="outline" size="sm" asChild className="gap-2">
+            <Button variant="outline" size="sm" asChild className="gap-2 hidden sm:flex">
               <Link to="/realtime">
                 <Radio className="w-4 h-4" />
-                Realtime
+                <span className="hidden md:inline">Realtime</span>
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild className="gap-2">
               <Link to="/reports">
                 <FileText className="w-4 h-4" />
-                Reports
+                <span className="hidden sm:inline">Reports</span>
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild className="gap-2">
               <Link to="/analytics">
                 <BarChart3 className="w-4 h-4" />
-                Analytics
+                <span className="hidden sm:inline">Analytics</span>
               </Link>
             </Button>
             <div className="flex items-center gap-2">
@@ -160,19 +161,19 @@ const Index = () => {
       </header>
 
       {/* Main Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 lg:gap-6 relative z-10">
         {/* Left: CCTV Grid */}
         <div>
           {/* CCTV Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
             {Array.from({
             length: 9
           }, (_, i) => i + 1).map(cameraId => <CCTVTile key={cameraId} cameraId={cameraId} detection={detections[cameraId] || null} onExpand={() => setExpandedCamera(cameraId)} isHighlighted={highlightedCamera === cameraId} videoSources={getVideoSources(cameraId)} onEventDetected={handleEventDetected} />)}
           </div>
         </div>
 
-        {/* Right: Camera Status + Notifications */}
-        <aside className="h-[calc(100vh-180px)] sticky top-6 space-y-4">
+        {/* Right: Camera Status + Notifications - hidden on mobile */}
+        <aside className="hidden lg:block h-[calc(100vh-180px)] sticky top-6 space-y-4">
           {/* Camera Status */}
           <div className="bg-card rounded-lg p-4 border border-border">
             <div className="flex items-center gap-2">

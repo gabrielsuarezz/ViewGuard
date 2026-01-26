@@ -146,33 +146,33 @@ const Analytics = () => {
               <p className="text-xs text-muted-foreground uppercase tracking-widest">Analytics</p>
             </div>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <Button variant="outline" size="sm" asChild className="gap-2">
               <Link to="/monitor">
                 <Shield className="w-4 h-4" />
-                Monitor
+                <span className="hidden sm:inline">Monitor</span>
               </Link>
             </Button>
-            <Button variant="outline" size="sm" asChild className="gap-2">
+            <Button variant="outline" size="sm" asChild className="gap-2 hidden sm:flex">
               <Link to="/upload">
                 <Upload className="w-4 h-4" />
-                Upload
+                <span className="hidden md:inline">Upload</span>
               </Link>
             </Button>
-            <Button variant="outline" size="sm" asChild className="gap-2">
+            <Button variant="outline" size="sm" asChild className="gap-2 hidden sm:flex">
               <Link to="/realtime">
                 <Radio className="w-4 h-4" />
-                Realtime
+                <span className="hidden md:inline">Realtime</span>
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild className="gap-2">
               <Link to="/reports">
                 <FileText className="w-4 h-4" />
-                Reports
+                <span className="hidden sm:inline">Reports</span>
               </Link>
             </Button>
             {/* Live Update Indicator */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card/80 border border-border backdrop-blur-sm">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg bg-card/80 border border-border backdrop-blur-sm">
               <div className="relative flex items-center justify-center w-5 h-5">
                 <div className={`absolute w-3 h-3 rounded-full transition-all duration-300 ${isLiveUpdate ? 'bg-green-500 shadow-[0_0_12px_rgba(34,197,94,0.8)]' : 'bg-green-500/40'}`} />
                 {isLiveUpdate && <>
@@ -208,7 +208,7 @@ const Analytics = () => {
       </header>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 relative z-10">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6 relative z-10">
         <Card className="bg-primary/10 border-primary/20">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -263,7 +263,7 @@ const Analytics = () => {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6 relative z-10">
         {/* Detection Trends */}
         <Card className="bg-primary/10 border-primary/20">
           <CardHeader>
@@ -271,7 +271,7 @@ const Analytics = () => {
             <CardDescription>Incidents over time by type</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250} className="sm:!h-[300px]">
               <LineChart data={detectionTrends}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="time" stroke="hsl(var(--muted-foreground))" style={{
@@ -326,7 +326,7 @@ const Analytics = () => {
       </div>
 
       {/* Detection Types & Heatmap */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 relative z-10">
         {/* Detection Types Distribution */}
         <Card className="bg-primary/10 border-primary/20">
           <CardHeader>
@@ -334,12 +334,12 @@ const Analytics = () => {
             <CardDescription>Distribution of incident types</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center">
-            <ResponsiveContainer width="100%" height={550}>
+            <ResponsiveContainer width="100%" height={300} className="sm:!h-[400px] md:!h-[550px]">
               <PieChart>
                 <Pie data={detectionTypes} cx="50%" cy="50%" labelLine={false} label={({
                 name,
                 percent
-              }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius={210} fill="#8884d8" dataKey="value" className="cursor-pointer">
+              }) => `${name} ${(percent * 100).toFixed(0)}%`} outerRadius="80%" fill="#8884d8" dataKey="value" className="cursor-pointer">
                   {detectionTypes.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} className="hover:opacity-80 transition-opacity" />)}
                 </Pie>
                 <Tooltip content={({
@@ -387,20 +387,20 @@ const Analytics = () => {
             <CardDescription>Hotspot zones across time periods</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              <div className="grid grid-cols-9 gap-2">
+            <div className="space-y-3 overflow-x-auto">
+              <div className="grid grid-cols-9 gap-1 sm:gap-2 min-w-[280px]">
                 {Array.from({
                 length: 9
-              }, (_, i) => <div key={i} className="text-center text-xs text-muted-foreground font-mono font-semibold">
+              }, (_, i) => <div key={i} className="text-center text-[10px] sm:text-xs text-muted-foreground font-mono font-semibold">
                     C{i + 1}
                   </div>)}
               </div>
-              {heatmapData.map((row, rowIndex) => <div key={rowIndex} className="grid grid-cols-9 gap-2">
-                  {row.map((value, colIndex) => <div key={colIndex} className={`aspect-square rounded-lg ${getHeatmapColor(value)} flex items-center justify-center text-sm font-bold ${value > 0 ? "text-foreground shadow-lg" : "text-muted-foreground"} hover:scale-110 transition-all duration-200 cursor-pointer border border-border/20`} title={`Camera ${colIndex + 1}, Time ${rowIndex + 1}: ${value} incidents`}>
+              {heatmapData.map((row, rowIndex) => <div key={rowIndex} className="grid grid-cols-9 gap-1 sm:gap-2 min-w-[280px]">
+                  {row.map((value, colIndex) => <div key={colIndex} className={`aspect-square rounded sm:rounded-lg ${getHeatmapColor(value)} flex items-center justify-center text-xs sm:text-sm font-bold ${value > 0 ? "text-foreground shadow-lg" : "text-muted-foreground"} hover:scale-110 transition-all duration-200 cursor-pointer border border-border/20`} title={`Camera ${colIndex + 1}, Time ${rowIndex + 1}: ${value} incidents`}>
                       {value > 0 ? value : "·"}
                     </div>)}
                 </div>)}
-              <div className="flex items-center justify-between pt-4 text-xs">
+              <div className="flex items-center justify-between pt-4 text-[10px] sm:text-xs flex-wrap gap-2">
                 <span className="text-muted-foreground font-medium">Low Activity</span>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
@@ -428,8 +428,8 @@ const Analytics = () => {
       </div>
 
       {/* AI Assistants */}
-      <div className="mt-6 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[600px]">
+      <div className="mt-4 sm:mt-6 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 min-h-[400px] lg:h-[600px]">
           {/* Voice Assistant */}
           <VoiceChat analyticsData={analyticsData} />
 

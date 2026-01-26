@@ -98,29 +98,29 @@ const Reports = () => {
               <p className="text-xs text-muted-foreground uppercase tracking-widest">Reports</p>
             </div>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Button variant="outline" size="sm" asChild className="gap-2">
               <Link to="/monitor">
                 <Shield className="w-4 h-4" />
-                Monitor
+                <span className="hidden sm:inline">Monitor</span>
               </Link>
             </Button>
-            <Button variant="outline" size="sm" asChild className="gap-2">
+            <Button variant="outline" size="sm" asChild className="gap-2 hidden sm:flex">
               <Link to="/upload">
                 <Upload className="w-4 h-4" />
-                Upload
+                <span className="hidden md:inline">Upload</span>
               </Link>
             </Button>
-            <Button variant="outline" size="sm" asChild className="gap-2">
+            <Button variant="outline" size="sm" asChild className="gap-2 hidden sm:flex">
               <Link to="/realtime">
                 <Radio className="w-4 h-4" />
-                Realtime
+                <span className="hidden md:inline">Realtime</span>
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild className="gap-2">
               <Link to="/analytics">
                 <BarChart3 className="w-4 h-4" />
-                Analytics
+                <span className="hidden sm:inline">Analytics</span>
               </Link>
             </Button>
           </div>
@@ -151,65 +151,67 @@ const Reports = () => {
               </p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-border">
-                  <TableHead className="text-foreground">Camera</TableHead>
-                  <TableHead className="text-foreground">Detection Type</TableHead>
-                  <TableHead className="text-foreground">Confidence</TableHead>
-                  <TableHead className="text-foreground">Timestamp</TableHead>
-                  <TableHead className="text-foreground">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reports.map((report) => (
-                  <TableRow
-                    key={report.id}
-                    className="cursor-pointer hover:bg-accent/50 transition-colors border-border"
-                    onClick={() => setSelectedReport(report)}
-                  >
-                    <TableCell className="font-medium text-foreground">
-                      Camera {report.cameraId}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getDetectionColor(report.detection.type) as any}>
-                        {report.detection.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-foreground">
-                      {report.detection.confidence}%
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-3 h-3" />
-                        {formatTimestamp(report.timestamp)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedReport(report);
-                        }}
-                      >
-                        <Play className="w-3 h-3" />
-                        View Footage
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent border-border">
+                    <TableHead className="text-foreground">Camera</TableHead>
+                    <TableHead className="text-foreground">Detection</TableHead>
+                    <TableHead className="text-foreground hidden sm:table-cell">Confidence</TableHead>
+                    <TableHead className="text-foreground hidden md:table-cell">Timestamp</TableHead>
+                    <TableHead className="text-foreground">Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {reports.map((report) => (
+                    <TableRow
+                      key={report.id}
+                      className="cursor-pointer hover:bg-accent/50 transition-colors border-border"
+                      onClick={() => setSelectedReport(report)}
+                    >
+                      <TableCell className="font-medium text-foreground text-sm">
+                        CAM {report.cameraId}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getDetectionColor(report.detection.type) as any} className="text-xs">
+                          {report.detection.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-foreground hidden sm:table-cell">
+                        {report.detection.confidence}%
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm hidden md:table-cell">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-3 h-3" />
+                          {formatTimestamp(report.timestamp)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedReport(report);
+                          }}
+                        >
+                          <Play className="w-3 h-3" />
+                          <span className="hidden sm:inline">View</span>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
       </div>
 
       {/* Video Footage Modal */}
       <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-4xl p-3 sm:p-6">
           <DialogHeader>
             <DialogTitle>Incident Footage Review</DialogTitle>
             <DialogDescription>
@@ -264,7 +266,7 @@ const Reports = () => {
             </div>
 
             {/* Report Details */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-card/50 rounded-lg border border-border">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 p-3 sm:p-4 bg-card/50 rounded-lg border border-border">
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Detection Type</p>
                 <Badge variant={getDetectionColor(selectedReport?.detection.type || "") as any}>

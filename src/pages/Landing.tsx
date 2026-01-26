@@ -159,10 +159,10 @@ const Landing = () => {
       <div className="absolute inset-0 bg-gradient-to-tl from-cyan-900/10 via-transparent to-blue-900/10" />
 
       {/* Content */}
-      <div className="relative z-10 text-center space-y-16 px-4">
+      <div className="relative z-10 text-center space-y-8 sm:space-y-12 md:space-y-16 px-4">
         {/* Title with Glow */}
         <div className="space-y-2">
-          <h1 className="text-8xl md:text-9xl font-bold tracking-tight leading-none">
+          <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-bold tracking-tight leading-none">
             <span 
               className="inline-block text-foreground"
               style={{
@@ -180,7 +180,7 @@ const Landing = () => {
               Guard
             </span>
           </h1>
-          <p className="text-muted-foreground text-lg md:text-xl tracking-widest font-light min-h-[1.75rem]">
+          <p className="text-muted-foreground text-sm sm:text-base md:text-lg lg:text-xl tracking-wide sm:tracking-widest font-light min-h-[1.5rem] sm:min-h-[1.75rem]">
             {typedText}
             <span className="animate-pulse">|</span>
           </p>
@@ -188,10 +188,10 @@ const Landing = () => {
 
         {/* CTA Button */}
         <div>
-          <Button 
-            asChild 
-            size="lg" 
-            className="group relative text-lg px-14 py-7 h-auto rounded-full bg-gradient-to-r from-blue-500 to-blue-900 text-white hover:from-blue-600 hover:to-blue-950 transition-all duration-500 shadow-[0_0_40px_rgba(59,130,246,0.6)] hover:shadow-[0_0_60px_rgba(59,130,246,0.9)] hover:scale-110 font-bold tracking-wide"
+          <Button
+            asChild
+            size="lg"
+            className="group relative text-base sm:text-lg px-8 sm:px-10 md:px-14 py-5 sm:py-6 md:py-7 h-auto rounded-full bg-gradient-to-r from-blue-500 to-blue-900 text-white hover:from-blue-600 hover:to-blue-950 transition-all duration-500 shadow-[0_0_40px_rgba(59,130,246,0.6)] hover:shadow-[0_0_60px_rgba(59,130,246,0.9)] hover:scale-105 sm:hover:scale-110 font-bold tracking-wide"
           >
             <Link to="/monitor" className="flex items-center gap-3">
               <span className="relative z-10">Get Started</span>

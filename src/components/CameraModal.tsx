@@ -46,17 +46,17 @@ const CameraModal = ({ isOpen, onClose, cameraId, detection, videoSources }: Cam
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 bg-card border-border">
-        <DialogHeader className="glass border-b border-border p-4">
-          <DialogTitle className="text-foreground font-bold flex items-center gap-2">
-            <Eye className="w-5 h-5 text-primary" />
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl p-0 bg-card border-border">
+        <DialogHeader className="glass border-b border-border p-3 sm:p-4">
+          <DialogTitle className="text-foreground font-bold flex items-center gap-2 text-sm sm:text-base">
+            <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
             Camera {cameraId} — Live Feed
           </DialogTitle>
         </DialogHeader>
 
-        <div className="p-4">
+        <div className="p-2 sm:p-4">
           {/* Expanded Video Feed */}
-          <div className="relative aspect-video bg-muted rounded-lg overflow-hidden scanline film-grain mb-4">
+          <div className="relative aspect-video bg-muted rounded-lg overflow-hidden scanline film-grain mb-2 sm:mb-4">
             <video
               ref={videoRef}
               src={currentVideo}
@@ -68,12 +68,12 @@ const CameraModal = ({ isOpen, onClose, cameraId, detection, videoSources }: Cam
             />
 
             {/* Timestamp */}
-            <div className="absolute top-4 left-4 px-3 py-1.5 bg-black/60 text-xs font-mono text-foreground/80">
+            <div className="absolute top-2 left-2 sm:top-4 sm:left-4 px-2 py-1 sm:px-3 sm:py-1.5 bg-black/60 text-[10px] sm:text-xs font-mono text-foreground/80">
               {getCurrentTime()}
             </div>
 
             {/* Camera ID */}
-            <div className="absolute top-4 right-4 px-3 py-1.5 bg-black/60 text-xs font-semibold text-foreground/80">
+            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 px-2 py-1 sm:px-3 sm:py-1.5 bg-black/60 text-[10px] sm:text-xs font-semibold text-foreground/80">
               CAM {cameraId}
             </div>
 
@@ -103,18 +103,18 @@ const CameraModal = ({ isOpen, onClose, cameraId, detection, videoSources }: Cam
           </div>
 
           {/* Timeline Scrubber */}
-          <div className="glass rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground font-mono">00:00</span>
-              <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+          <div className="glass rounded-lg p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="text-[10px] sm:text-xs text-muted-foreground font-mono">00:00</span>
+              <div className="flex-1 h-1.5 sm:h-2 bg-muted rounded-full overflow-hidden">
                 <div className="h-full w-1/3 bg-primary"></div>
               </div>
-              <span className="text-xs text-muted-foreground font-mono">05:00</span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground font-mono">05:00</span>
             </div>
 
             {/* Logged Detections */}
-            <div className="mt-4">
-              <h4 className="text-xs font-bold text-foreground mb-2">Logged Detections</h4>
+            <div className="mt-3 sm:mt-4">
+              <h4 className="text-[10px] sm:text-xs font-bold text-foreground mb-2">Logged Detections</h4>
               <div className="space-y-2">
                 {detection ? (
                   <div className="flex items-center justify-between p-2 bg-muted/30 rounded text-xs">
